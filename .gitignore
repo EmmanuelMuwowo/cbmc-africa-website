@@ -1,0 +1,8 @@
+public_html/api/includes/config.php
+public_html/uploads/*
+!public_html/uploads/.gitkeep
+!public_html/uploads/resources/
+public_html/uploads/resources/*
+!public_html/uploads/resources/.gitkeep
+*.log
+.DS_Store

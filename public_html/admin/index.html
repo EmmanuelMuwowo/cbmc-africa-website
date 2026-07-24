@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — CBMC Africa</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-mark">CBMC<span>.</span></div>
+      <div class="admin-brand-sub">ADMIN · CONTENT MANAGER</div>
+    </div>
+    <nav id="adminNav"></nav>
+    <div class="admin-sidebar-foot"><a href="../index.html" class="exit-btn">← View public site</a></div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <div class="admin-title" id="adminTitle">Dashboard</div>
+        <div class="admin-subtitle" id="adminSubtitle"></div>
+      </div>
+      <div class="admin-topbar-actions">
+        <form class="admin-search" id="adminSearchForm">
+          <span style="color:#86868b;">⌕</span>
+          <input id="adminSearchInput" placeholder="Search content…">
+        </form>
+        <button class="btn-new-manna" id="newMannaBtn">+ New Monday Manna</button>
+        <div class="admin-avatar" id="adminAvatar">··</div>
+      </div>
+    </div>
+    <div class="admin-content" id="adminContent"></div>
+  </main>
+</div>
+
+<!-- Compose / edit Monday Manna modal -->
+<div class="modal-overlay" id="composeModal">
+  <div class="modal-box" style="max-width:540px;">
+    <div style="display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border-cream-2);">
+      <div class="serif" style="font-size:19px;font-weight:600;" id="composeTitle">New Monday Manna</div>
+      <button class="modal-close" id="composeClose" style="position:static;color:#86868b;margin-left:auto;">×</button>
+    </div>
+    <div id="composeBody" style="padding:22px 24px;overflow:auto;"></div>
+  </div>
+</div>
+
+<!-- Upload / edit Resource modal -->
+<div class="modal-overlay" id="resourceModal">
+  <div class="modal-box" style="max-width:560px;">
+    <div style="display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border-cream-2);">
+      <div class="serif" style="font-size:19px;font-weight:600;" id="resourceModalTitle">New Resource</div>
+      <button class="modal-close" id="resourceModalClose" style="position:static;color:#86868b;margin-left:auto;">×</button>
+    </div>
+    <div id="resourceModalBody" style="padding:22px 24px;overflow:auto;max-height:70vh;"></div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/util.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

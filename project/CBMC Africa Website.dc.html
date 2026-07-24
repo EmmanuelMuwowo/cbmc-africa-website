@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Archivo',system-ui,sans-serif;color:#1c1e24;background:#ece3d2;-webkit-font-smoothing:antialiased;}
+  a{color:#1f5c8b;text-decoration:none;}
+  a:hover{color:#c28a2b;}
+  h1,h2,h3,h4{margin:0;}
+  p{margin:0;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,textarea,select{font-family:inherit;}
+  ::selection{background:#ecd9a8;color:#0f2f4c;}
+</style>
+</helmet>
+
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;background:#0e2032;color:#e9edf2;">
+  <aside style="width:246px;min-width:210px;background:#0b1a2a;border-right:1px solid rgba(255,255,255,.06);padding:22px 0;display:flex;flex-direction:column;">
+    <div style="padding:0 22px 20px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:14px;">
+      <div style="font-family:'Spectral',serif;font-weight:700;font-size:22px;color:#fff;letter-spacing:.5px;">CBMC<span style="color:#d7a13f;">.</span></div>
+      <div style="font-size:10.5px;letter-spacing:2.6px;color:#8ea3b8;margin-top:3px;">ADMIN · CONTENT MANAGER</div>
+    </div>
+    <sc-for list="{{ adminNav }}" as="item" hint-placeholder-count="10">
+      <button onClick="{{ item.onClick }}" style="{{ item.style }}">
+        <span style="width:7px;height:7px;border-radius:50%;background:{{ item.dot }};display:inline-block;"></span>
+        {{ item.label }}
+        <sc-if value="{{ item.badge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;background:#c9452f;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;">{{ item.badge }}</span></sc-if>
+      </button>
+    </sc-for>
+    <div style="margin-top:auto;padding:16px 22px 0;">
+      <button onClick="{{ exitAdmin }}" style="width:100%;padding:11px;border-radius:9px;background:rgba(255,255,255,.06);color:#cdd9e4;font-weight:600;font-size:13px;">← View public site</button>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:320px;background:#f4f0e8;color:#1c1e24;">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 30px;background:#fff;border-bottom:1px solid #e6dcc9;">
+      <div>
+        <div style="font-family:'Spectral',serif;font-size:22px;font-weight:600;">{{ adminHead.title }}</div>
+        <div style="font-size:13px;color:#6a6f78;">{{ adminHead.subtitle }}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+        <form onSubmit="{{ preventSubmit }}" style="display:flex;align-items:center;gap:8px;background:#f4f0e8;border:1px solid #e6dcc9;border-radius:9px;padding:8px 12px;">
+          <span style="color:#9aa0a8;">⌕</span><input value="{{ adminSearch }}" onChange="{{ onSearch }}" placeholder="Search content…" style="border:none;background:none;outline:none;font-size:13px;width:150px;color:#1c1e24;">
+        </form>
+        <button onClick="{{ openCompose }}" style="background:#c28a2b;color:#10233a;font-weight:700;font-size:13px;padding:10px 16px;border-radius:9px;">+ New Monday Manna</button>
+        <div style="width:38px;height:38px;border-radius:50%;background:#0f2f4c;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">GM</div>
+      </div>
+    </div>
+
+    <div style="padding:26px 30px;">
+
+      <!-- DASHBOARD -->
+      <sc-if value="{{ adminIsDash }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:26px;">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="5">
+            <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:18px 20px;">
+              <div style="font-size:12px;letter-spacing:1.4px;color:#8a8f98;text-transform:uppercase;font-weight:600;">{{ s.label }}</div>
+              <div style="font-family:'Spectral',serif;font-size:34px;font-weight:600;color:#0f2f4c;margin-top:6px;line-height:1;">{{ s.value }}</div>
+              <div style="font-size:12.5px;color:{{ s.deltaColor }};margin-top:8px;font-weight:600;">{{ s.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:20px;align-items:start;">
+          <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;overflow:hidden;">
+            <div style="display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid #eee3d1;">
+              <div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;">Monday Manna — Recent posts</div>
+              <button onClick="{{ goAdminManna }}" style="margin-left:auto;font-size:13px;color:#1f5c8b;font-weight:600;">View all</button>
+            </div>
+            <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 0.9fr;gap:10px;padding:11px 20px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#9aa0a8;font-weight:700;background:#faf7f0;">
+              <div>Title</div><div>Author</div><div>Published</div><div>Status</div>
+            </div>
+            <sc-for list="{{ dashPosts }}" as="p" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 0.9fr;gap:10px;padding:14px 20px;border-top:1px solid #f0e8d8;align-items:center;font-size:13.5px;">
+                <div style="font-weight:600;color:#22303f;">{{ p.title }}</div>
+                <div style="color:#5c626b;">{{ p.author }}</div>
+                <div style="color:#5c626b;">{{ p.date }}</div>
+                <div><span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:{{ p.badgeBg }};color:{{ p.badgeColor }};">{{ p.status }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:18px 20px;">
+              <div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;margin-bottom:14px;">Recent contact messages</div>
+              <sc-for list="{{ dashMessages }}" as="m" hint-placeholder-count="3">
+                <button onClick="{{ goAdminMsgs }}" style="display:flex;width:100%;text-align:left;gap:12px;padding:11px 0;border-top:1px solid #f0e8d8;">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#e8dcc4;color:#7a5c1e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">{{ m.initials }}</div>
+                  <div style="min-width:0;">
+                    <div style="font-weight:600;font-size:13.5px;color:#22303f;">{{ m.name }}</div>
+                    <div style="font-size:12.5px;color:#6a6f78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.preview }}</div>
+                  </div>
+                  <div style="margin-left:auto;font-size:11.5px;color:#9aa0a8;flex-shrink:0;">{{ m.time }}</div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="background:linear-gradient(150deg,#0f2f4c,#14395c);border-radius:14px;padding:20px;color:#eaf0f6;">
+              <div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;color:#fff;">Quick actions</div>
+              <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;">
+                <sc-for list="{{ quickActions }}" as="q" hint-placeholder-count="4">
+                  <button onClick="{{ q.onClick }}" style="text-align:left;background:rgba(255,255,255,.08);border-radius:9px;padding:11px 14px;color:#eaf0f6;font-size:13px;font-weight:600;" style-hover="background:rgba(255,255,255,.16);">{{ q.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- MANNA / NEWS / EVENTS / SUBS TABLE-STYLE SECTIONS -->
+      <sc-if value="{{ adminIsTable }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:15px 20px;border-bottom:1px solid #eee3d1;flex-wrap:wrap;gap:10px;">
+            <div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;">{{ tableView.heading }}</div>
+            <span style="font-size:12.5px;color:#9aa0a8;">{{ tableView.count }} items</span>
+            <button onClick="{{ tableView.onAdd }}" style="margin-left:auto;background:#0f2f4c;color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:9px;">{{ tableView.addLabel }}</button>
+          </div>
+          <div style="{{ tableView.headStyle }}">
+            <sc-for list="{{ tableView.cols }}" as="c" hint-placeholder-count="4"><div>{{ c }}</div></sc-for>
+          </div>
+          <sc-for list="{{ tableView.rows }}" as="r" hint-placeholder-count="6">
+            <div style="{{ r.rowStyle }}">
+              <sc-for list="{{ r.cells }}" as="cell" hint-placeholder-count="4">
+                <sc-if value="{{ cell.isBadge }}" hint-placeholder-val="{{ false }}"><div><span style="font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:{{ cell.bg }};color:{{ cell.color }};">{{ cell.text }}</span></div></sc-if>
+                <sc-if value="{{ cell.isText }}" hint-placeholder-val="{{ true }}"><div style="{{ cell.style }}">{{ cell.text }}</div></sc-if>
+              </sc-for>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onClick="{{ r.onEdit }}" style="font-size:12px;font-weight:600;color:#1f5c8b;padding:5px 10px;border-radius:7px;background:#eef4f9;">Edit</button>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ tableView.empty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 20px;text-align:center;color:#9aa0a8;font-size:14px;">No items match “{{ adminSearch }}”.</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- MESSAGES -->
+      <sc-if value="{{ adminIsMsgs }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;overflow:hidden;">
+          <div style="padding:15px 20px;border-bottom:1px solid #eee3d1;font-family:'Spectral',serif;font-size:17px;font-weight:600;">Inbox — {{ messages.length }} messages</div>
+          <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;gap:14px;padding:16px 20px;border-top:1px solid #f0e8d8;align-items:flex-start;">
+              <div style="width:40px;height:40px;border-radius:50%;background:#e8dcc4;color:#7a5c1e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">{{ m.initials }}</div>
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;gap:10px;align-items:center;"><span style="font-weight:600;font-size:14.5px;">{{ m.name }}</span><span style="font-size:12px;color:#9aa0a8;">{{ m.email }}</span></div>
+                <div style="font-size:14px;color:#4a4f57;margin-top:5px;line-height:1.5;">{{ m.preview }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+                <span style="font-size:11.5px;color:#9aa0a8;">{{ m.time }}</span>
+                <button style="font-size:12px;font-weight:600;color:#0f2f4c;padding:5px 12px;border-radius:7px;background:#f0e8d8;">Reply</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- MEDIA -->
+      <sc-if value="{{ adminIsMedia }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:20px;">
+          <div style="display:flex;align-items:center;margin-bottom:16px;"><div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;">Media Library</div><button style="margin-left:auto;background:#0f2f4c;color:#fff;font-weight:700;font-size:12.5px;padding:9px 15px;border-radius:9px;">↑ Upload</button></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
+            <sc-for list="{{ mediaTiles }}" as="t" hint-placeholder-count="6">
+              <div style="border:1px solid #e6dcc9;border-radius:11px;overflow:hidden;background:#f8f3e9;">
+                <div style="height:110px;background:#0f2f4c center/cover no-repeat;background-image:{{ t.bg }};overflow:hidden;"></div>
+                <div style="padding:9px 11px;font-size:12px;color:#5c626b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ t.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- SETTINGS -->
+      <sc-if value="{{ adminIsSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:640px;background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:26px;">
+          <div style="font-family:'Spectral',serif;font-size:18px;font-weight:600;margin-bottom:20px;">Organization settings</div>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <sc-for list="{{ settingsFields }}" as="f" hint-placeholder-count="4">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.5px;color:#6a6f78;margin-bottom:6px;">{{ f.label }}</label>
+                <input value="{{ f.value }}" onChange="{{ noop }}" style="width:100%;padding:12px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14px;background:#faf7f0;outline:none;">
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#faf7f0;border:1px solid #eee3d1;border-radius:10px;">
+              <div><div style="font-weight:600;font-size:14px;">Weekly Monday Manna email</div><div style="font-size:12.5px;color:#8a8f98;">Auto-send every Monday at 6:00 AM</div></div>
+              <button onClick="{{ toggleMannaEmail }}" style="width:46px;height:26px;border-radius:20px;background:{{ mannaEmailBg }};position:relative;transition:background .2s;"><span style="position:absolute;top:3px;left:{{ mannaEmailKnob }};width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;"></span></button>
+            </div>
+            <button style="align-self:flex-start;background:#c28a2b;color:#10233a;font-weight:700;font-size:14px;padding:12px 22px;border-radius:9px;margin-top:4px;">Save changes</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+
+  <!-- COMPOSE MODAL -->
+  <sc-if value="{{ composeOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCompose }}" style="position:fixed;inset:0;z-index:80;background:rgba(8,20,32,.6);display:flex;align-items:center;justify-content:center;padding:24px;">
+      <div onClick="{{ stop }}" style="width:100%;max-width:540px;background:#fff;color:#1c1e24;border-radius:16px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid #eee3d1;">
+          <div style="font-family:'Spectral',serif;font-size:19px;font-weight:600;">New Monday Manna</div>
+          <button onClick="{{ closeCompose }}" style="margin-left:auto;font-size:24px;color:#9aa0a8;line-height:1;">×</button>
+        </div>
+        <sc-if value="{{ composeDone }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:40px 24px;text-align:center;">
+            <div style="width:56px;height:56px;border-radius:50%;background:#e7f2e9;color:#2f7d46;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto;">✓</div>
+            <div style="font-family:'Spectral',serif;font-size:20px;font-weight:600;margin-top:16px;">Draft saved</div>
+            <p style="color:#6a6f78;font-size:14px;margin-top:8px;">“{{ compose.title }}” was added to your Monday Manna list.</p>
+            <button onClick="{{ closeCompose }}" style="margin-top:18px;background:#0f2f4c;color:#fff;font-weight:600;font-size:14px;padding:11px 22px;border-radius:9px;">Done</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ composeForm }}" hint-placeholder-val="{{ true }}">
+          <form onSubmit="{{ submitCompose }}" style="padding:22px 24px;overflow:auto;display:flex;flex-direction:column;gap:16px;">
+            <div><label style="display:block;font-size:12px;font-weight:700;color:#6a6f78;margin-bottom:6px;">TITLE</label><input required value="{{ compose.title }}" onChange="{{ onComposeTitle }}" placeholder="e.g. When Excellence Becomes Worship" style="width:100%;padding:12px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14px;outline:none;"></div>
+            <div><label style="display:block;font-size:12px;font-weight:700;color:#6a6f78;margin-bottom:6px;">AUTHOR</label><input required value="{{ compose.author }}" onChange="{{ onComposeAuthor }}" placeholder="e.g. Robert J. Tamasy" style="width:100%;padding:12px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14px;outline:none;"></div>
+            <div><label style="display:block;font-size:12px;font-weight:700;color:#6a6f78;margin-bottom:6px;">DEVOTIONAL BODY</label><textarea value="{{ compose.body }}" onChange="{{ onComposeBody }}" placeholder="Write the meditation…" style="width:100%;min-height:120px;padding:12px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14px;outline:none;resize:vertical;"></textarea></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
+              <button type="button" onClick="{{ closeCompose }}" style="padding:12px 20px;border-radius:9px;background:#f0e8d8;color:#5c626b;font-weight:600;font-size:14px;">Cancel</button>
+              <button type="submit" style="padding:12px 22px;border-radius:9px;background:#c28a2b;color:#10233a;font-weight:700;font-size:14px;">Save draft</button>
+            </div>
+          </form>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSite }}" hint-placeholder-val="{{ true }}">
+<div style="background:#f8f3e9;">
+
+  <header style="position:sticky;top:0;z-index:40;background:rgba(255,253,249,.94);backdrop-filter:blur(10px);border-bottom:1px solid #e6dcc9;">
+    <div style="max-width:1220px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:13px 24px;">
+      <button onClick="{{ goHome }}" style="display:flex;align-items:center;gap:11px;">
+        <span style="width:38px;height:38px;border-radius:9px;background:#0f2f4c;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;font-weight:700;font-size:17px;">C<span style="color:#d7a13f;">.</span></span>
+        <span style="text-align:left;line-height:1;">
+          <span style="display:block;font-family:'Spectral',serif;font-weight:700;font-size:20px;color:#0f2f4c;">CBMC Africa</span>
+          <span style="display:block;font-size:9.5px;letter-spacing:2.3px;color:#9a7a3a;margin-top:3px;font-weight:600;">MARKETPLACE MINISTRY</span>
+        </span>
+      </button>
+
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+        <nav style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+            <button onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.label }}</button>
+          </sc-for>
+          <button onClick="{{ goDonate }}" style="margin-left:12px;background:#c28a2b;color:#10233a;font-weight:700;font-size:13.5px;padding:10px 18px;border-radius:9px;" style-hover="background:#a9761f;">Give</button>
+        </nav>
+      </sc-if>
+      <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleMenu }}" style="margin-left:auto;width:44px;height:44px;border-radius:9px;border:1px solid #e6dcc9;display:flex;align-items:center;justify-content:center;font-size:20px;color:#0f2f4c;">☰</button>
+      </sc-if>
+    </div>
+  </header>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:60;background:#0f2f4c;color:#fff;padding:22px 24px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;">
+        <span style="font-family:'Spectral',serif;font-weight:700;font-size:22px;">CBMC Africa</span>
+        <button onClick="{{ toggleMenu }}" style="margin-left:auto;font-size:30px;color:#fff;line-height:1;">×</button>
+      </div>
+      <nav style="display:flex;flex-direction:column;gap:2px;margin-top:34px;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+          <button onClick="{{ n.onClick }}" style="text-align:left;font-family:'Spectral',serif;font-size:26px;font-weight:500;color:#fff;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.1);">{{ n.label }}</button>
+        </sc-for>
+        <button onClick="{{ goDonate }}" style="text-align:left;font-family:'Spectral',serif;font-size:26px;font-weight:500;color:#d7a13f;padding:14px 0;">Give →</button>
+      </nav>
+    </div>
+  </sc-if>
+
+  <main>
+
+  <!-- ============ HOME ============ -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <section style="position:relative;background:#0f2f4c;overflow:hidden;">
+      <img src="https://cbmcafrica.org/wp-content/uploads/layerslider/Home/dJJxbATA.jpeg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;">
+      <div style="position:absolute;inset:0;background:linear-gradient(100deg,rgba(12,38,62,.94) 30%,rgba(12,38,62,.5));"></div>
+      <div style="position:relative;max-width:1220px;margin:0 auto;padding:clamp(64px,11vw,120px) 24px clamp(72px,12vw,128px);">
+        <div style="font-size:12.5px;letter-spacing:3.4px;color:#e6c886;font-weight:600;margin-bottom:20px;">CBMC AFRICA · SINCE THE MARKETPLACE MET CHRIST</div>
+        <h1 style="font-family:'Spectral',serif;font-weight:600;color:#fff;font-size:clamp(34px,5.4vw,62px);line-height:1.06;max-width:15ch;letter-spacing:-.5px;">Connecting Business &amp; the Marketplace to Christ.</h1>
+        <p style="color:#d7e0ea;font-size:clamp(16px,1.7vw,20px);line-height:1.6;max-width:56ch;margin-top:24px;">An interdenominational, evangelical movement of business and professional men and women, comprised of national associations across Africa.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:34px;">
+          <button onClick="{{ goManna }}" style="background:#c28a2b;color:#10233a;font-weight:700;font-size:15px;padding:15px 26px;border-radius:10px;" style-hover="background:#d99e3b;">Read Monday Manna</button>
+          <button onClick="{{ goAbout }}" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.35);color:#fff;font-weight:600;font-size:15px;padding:15px 26px;border-radius:10px;" style-hover="background:rgba(255,255,255,.2);">Who we are</button>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#f8f3e9;padding:clamp(56px,8vw,86px) 24px;">
+      <div style="max-width:1000px;margin:0 auto;text-align:center;">
+        <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">OUR EQUATION</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px;margin-top:28px;">
+          <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:22px 30px;font-family:'Spectral',serif;font-size:clamp(18px,2.4vw,26px);font-weight:600;color:#0f2f4c;">Jesus Christ</div>
+          <span style="font-family:'Spectral',serif;font-size:34px;color:#c28a2b;">+</span>
+          <div style="background:#fff;border:1px solid #e6dcc9;border-radius:14px;padding:22px 30px;font-family:'Spectral',serif;font-size:clamp(18px,2.4vw,26px);font-weight:600;color:#0f2f4c;">The Marketplace</div>
+          <span style="font-family:'Spectral',serif;font-size:34px;color:#c28a2b;">=</span>
+          <div style="background:#0f2f4c;border-radius:14px;padding:22px 34px;font-family:'Spectral',serif;font-size:clamp(18px,2.4vw,26px);font-weight:700;color:#fff;letter-spacing:1px;">CBMC</div>
+        </div>
+        <p style="max-width:60ch;margin:30px auto 0;color:#454b54;font-size:17px;line-height:1.7;text-wrap:pretty;">We share a common statement of beliefs, ministry practices, and a passion to see lives transformed by the Gospel of Jesus Christ — right where He has placed us: at work.</p>
+      </div>
+    </section>
+
+    <section style="background:#fffdf9;border-top:1px solid #eee3d1;border-bottom:1px solid #eee3d1;padding:clamp(56px,8vw,86px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:34px;">
+          <div>
+            <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">WEEKLY DEVOTIONAL</div>
+            <h2 style="font-family:'Spectral',serif;font-size:clamp(28px,3.6vw,40px);font-weight:600;color:#16202b;margin-top:8px;">Monday Manna</h2>
+          </div>
+          <button onClick="{{ goManna }}" style="margin-left:auto;color:#1f5c8b;font-weight:600;font-size:14.5px;" style-hover="color:#c28a2b;">All devotionals →</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;">
+          <sc-for list="{{ latest }}" as="d" hint-placeholder-count="3">
+            <button onClick="{{ d.open }}" style="text-align:left;background:#fff;border:1px solid #e6dcc9;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#c28a2b;">
+              <div style="height:190px;background:#0f2f4c center/cover no-repeat;background-image:{{ d.bg }};overflow:hidden;"></div>
+              <div style="padding:20px 22px 24px;display:flex;flex-direction:column;flex:1;">
+                <div style="font-size:12px;color:#b98a2e;letter-spacing:1.5px;font-weight:700;">{{ d.date }}</div>
+                <h3 style="font-family:'Spectral',serif;font-size:20px;font-weight:600;color:#16202b;margin-top:10px;line-height:1.25;">{{ d.title }}</h3>
+                <p style="color:#5c626b;font-size:14.5px;line-height:1.6;margin-top:10px;">{{ d.excerpt }}</p>
+                <div style="margin-top:auto;padding-top:16px;font-size:13px;color:#6a6f78;">By {{ d.author }} · <span style="color:#1f5c8b;font-weight:600;">Read →</span></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="position:relative;background:#0f2f4c;overflow:hidden;padding:clamp(52px,7vw,80px) 24px;">
+      <div style="position:absolute;top:-60px;right:-40px;width:280px;height:280px;border-radius:50%;background:rgba(215,161,63,.12);"></div>
+      <div style="position:relative;max-width:1220px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px;align-items:center;">
+        <div>
+          <div style="font-size:12px;letter-spacing:3px;color:#e6c886;font-weight:700;">STAY ENCOURAGED</div>
+          <h2 style="font-family:'Spectral',serif;font-size:clamp(26px,3.4vw,38px);font-weight:600;color:#fff;margin-top:10px;line-height:1.15;">Get Monday Manna in your inbox every week.</h2>
+          <p style="color:#c6d2df;font-size:16px;line-height:1.65;margin-top:14px;max-width:46ch;">A short workplace meditation to start your week — read in more than 20 languages across the globe.</p>
+        </div>
+        <div style="background:#fffdf9;border-radius:16px;padding:26px;">
+          <sc-if value="{{ subscribed }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:26px 8px;">
+              <div style="width:56px;height:56px;border-radius:50%;background:#e7f2e9;color:#2f7d46;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto;">✓</div>
+              <h3 style="font-family:'Spectral',serif;font-size:22px;font-weight:600;color:#16202b;margin-top:16px;">You're subscribed!</h3>
+              <p style="color:#5c626b;font-size:14.5px;margin-top:8px;line-height:1.55;">Look out for your first Monday Manna this coming Monday morning.</p>
+              <button onClick="{{ resetSub }}" style="margin-top:16px;color:#1f5c8b;font-weight:600;font-size:13.5px;">Add another email</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notSubscribed }}" hint-placeholder-val="{{ true }}">
+            <form onSubmit="{{ subscribe }}">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5c626b;letter-spacing:.5px;">FULL NAME</label>
+              <input required placeholder="Your name" style="width:100%;margin-top:6px;margin-bottom:16px;padding:13px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14.5px;background:#fff;outline:none;">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#5c626b;letter-spacing:.5px;">EMAIL ADDRESS</label>
+              <input required type="email" placeholder="you@company.com" style="width:100%;margin-top:6px;margin-bottom:20px;padding:13px 14px;border:1px solid #d9cdb5;border-radius:9px;font-size:14.5px;background:#fff;outline:none;">
+              <button type="submit" style="width:100%;background:#c28a2b;color:#10233a;font-weight:700;font-size:15px;padding:14px;border-radius:9px;" style-hover="background:#a9761f;">Subscribe free</button>
+              <p style="text-align:center;font-size:12px;color:#9aa0a8;margin-top:12px;">No spam. Unsubscribe anytime.</p>
+            </form>
+          </sc-if>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#fffdf9;border-bottom:1px solid #eee3d1;padding:clamp(56px,8vw,86px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:34px;">
+          <div>
+            <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">NEWS &amp; FEATURED ARTICLES</div>
+            <h2 style="font-family:'Spectral',serif;font-size:clamp(28px,3.6vw,40px);font-weight:600;color:#16202b;margin-top:8px;">From across the movement</h2>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;">
+          <sc-for list="{{ news }}" as="a" hint-placeholder-count="4">
+            <button onClick="{{ a.open }}" style="text-align:left;background:#fff;border:1px solid #e6dcc9;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#c28a2b;">
+              <div style="height:158px;background:#14395c center/cover no-repeat;background-image:{{ a.bg }};overflow:hidden;"></div>
+              <div style="padding:18px 20px 22px;display:flex;flex-direction:column;flex:1;">
+                <div style="font-size:11.5px;color:#b98a2e;letter-spacing:1.4px;font-weight:700;">{{ a.date }}</div>
+                <h3 style="font-family:'Spectral',serif;font-size:17.5px;font-weight:600;color:#16202b;margin-top:9px;line-height:1.3;">{{ a.title }}</h3>
+                <p style="color:#5c626b;font-size:13.5px;line-height:1.55;margin-top:9px;">{{ a.excerpt }}</p>
+                <div style="margin-top:auto;padding-top:14px;font-size:12.5px;color:#8a8f98;">{{ a.author }} · <span style="color:#1f5c8b;font-weight:600;">Read →</span></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#f8f3e9;padding:clamp(56px,8vw,86px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:40px;">
+          <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">HOW WE MINISTER</div>
+          <h2 style="font-family:'Spectral',serif;font-size:clamp(28px,3.6vw,40px);font-weight:600;color:#16202b;margin-top:8px;">Six unique ministry practices</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">
+          <sc-for list="{{ practices }}" as="p" hint-placeholder-count="6">
+            <div style="background:#fffdf9;border:1px solid #e6dcc9;border-radius:14px;padding:26px 24px;">
+              <div style="font-family:'Spectral',serif;font-size:30px;font-weight:700;color:#e0c197;">{{ p.num }}</div>
+              <h3 style="font-size:14px;letter-spacing:2px;font-weight:700;color:#0f2f4c;margin-top:6px;">{{ p.title }}</h3>
+              <p style="color:#5c626b;font-size:14px;line-height:1.6;margin-top:12px;">{{ p.text }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="position:relative;background:linear-gradient(120deg,#c28a2b,#a9761f);overflow:hidden;padding:clamp(52px,7vw,82px) 24px;">
+      <div style="position:relative;max-width:1000px;margin:0 auto;text-align:center;">
+        <h2 style="font-family:'Spectral',serif;font-size:clamp(28px,3.8vw,44px);font-weight:600;color:#fff;line-height:1.12;">Partner with the Gospel in Africa's marketplace.</h2>
+        <p style="color:#fbeed2;font-size:17px;line-height:1.6;max-width:52ch;margin:16px auto 0;">Your giving helps establish and strengthen CBMC national teams across the continent.</p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:28px;">
+          <button onClick="{{ goDonate }}" style="background:#0f2f4c;color:#fff;font-weight:700;font-size:15px;padding:15px 30px;border-radius:10px;" style-hover="background:#0a2338;">Donate now</button>
+          <button onClick="{{ goEvents }}" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;font-weight:600;font-size:15px;padding:15px 30px;border-radius:10px;">See upcoming events</button>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- ============ ABOUT ============ -->
+  <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#0f2f4c;padding:clamp(56px,8vw,92px) 24px;">
+      <div style="max-width:1000px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:3px;color:#e6c886;font-weight:700;">ABOUT US</div>
+        <h1 style="font-family:'Spectral',serif;font-size:clamp(34px,5vw,56px);font-weight:600;color:#fff;margin-top:14px;line-height:1.05;">Who we are</h1>
+        <p style="color:#cdd9e4;font-size:clamp(17px,1.9vw,21px);line-height:1.6;max-width:60ch;margin-top:22px;">We are Connecting Business &amp; the Marketplace to Christ — an interdenominational, evangelical Christian organization comprised of national associations around Africa.</p>
+      </div>
+    </section>
+
+    <section style="background:#f8f3e9;padding:clamp(52px,7vw,82px) 24px;">
+      <div style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px;">
+        <div>
+          <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">OUR MISSION</div>
+          <h2 style="font-family:'Spectral',serif;font-size:clamp(24px,3vw,32px);font-weight:600;color:#16202b;margin-top:10px;line-height:1.2;">Strengthening teams to reach the marketplace.</h2>
+          <p style="color:#454b54;font-size:16px;line-height:1.7;margin-top:16px;">Our mission is to establish and strengthen CBMC national and regional teams to be effective as they present the Gospel of Jesus Christ to their colleagues in the global marketplace — and to help others be transformed to Christ-likeness.</p>
+        </div>
+        <div style="background:#0f2f4c;border-radius:16px;padding:34px;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-family:'Spectral',serif;font-size:clamp(22px,3vw,30px);font-weight:600;color:#fff;line-height:1.3;">Jesus Christ <span style="color:#d7a13f;">+</span> The Marketplace <span style="color:#d7a13f;">=</span> CBMC</div>
+          <p style="color:#c6d2df;font-size:15px;line-height:1.65;margin-top:18px;">Jesus compared the kingdom of God to a mustard seed that grows larger than all the garden plants. Today authentic Christ-followers live and work in every major city on earth — enabling the next step in that growth: marketplace ministry.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#fffdf9;border-top:1px solid #eee3d1;padding:clamp(52px,7vw,82px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:3px;color:#b98a2e;font-weight:700;">WHAT WE DO</div>
+        <h2 style="font-family:'Spectral',serif;font-size:clamp(26px,3.4vw,38px);font-weight:600;color:#16202b;margin-top:8px;margin-bottom:34px;">Three guiding initiatives</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;">
+          <sc-for list="{{ initiatives }}" as="i" hint-placeholder-count="3">
+            <div style="background:#f8f3e9;border:1px solid #e6dcc9;border-radius:16px;padding:28px 26px;">
+              <div style="width:46px;height:46px;border-radius:11px;background:#0f2f4c;color:#d7a13f;display:flex;align-items:center;justify-content:center;font-size:22px;">{{ i.icon }}</div>
+              <div style="font-size:11.5px;letter-spacing:2px;color:#b98a2e;font-weight:700;margin-top:18px;">{{ i.tag }}</div>
+              <h3 style="font-family:'Spectral',serif;font-size:22px;font-weight:600;color:#16202b;margin-top:6px;">{{ i.title }}</h3>
+              <p style="color:#5c626b;font-size:14.5px;line-height:1.65;margin-top:12px;">{{ i.text }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#f8f3e9;padding:clamp(52px,7vw,82px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <h2 style="font-family:'Spectral',serif;font-size:clamp(26px,3.4vw,38px);font-weight:600;color:#16202b;margin-bottom:34px;">Our six ministry distinctives</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">
+          <sc-for list="{{ practices }}" as="p" hint-placeholder-count="6">
+            <div style="background:#fffdf9;border:1px solid #e6dcc9;border-radius:14px;padding:26px 24px;">
+              <div style="font-family:'Spectral',serif;font-size:30px;font-weight:700;color:#e0c197;">{{ p.num }}</div>
+              <h3 style="font-size:14px;letter-spacing:2px;font-weight:700;color:#0f2f4c;margin-top:6px;">{{ p.title }}</h3>
+              <p style="color:#5c626b;font-size:14px;line-height:1.6;margin-top:12px;">{{ p.text }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- ============ MONDAY MANNA LIST ============ -->
+  <sc-if value="{{ isManna }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#0f2f4c;padding:clamp(52px,7vw,84px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:3px;color:#e6c886;font-weight:700;">WEEKLY DEVOTIONAL</div>
+        <h1 style="font-family:'Spectral',serif;font-size:clamp(34px,5vw,56px);font-weight:600;color:#fff;margin-top:12px;">Monday Manna</h1>
+        <p style="color:#cdd9e4;font-size:clamp(16px,1.8vw,20px);line-height:1.6;max-width:62ch;margin-top:18px;">A weekly workplace meditation, showing the practical relevance of the Bible's teaching for everyday issues in the business and professional world.</p>
+      </div>
+    </section>
+    <section style="background:#f8f3e9;padding:clamp(44px,6vw,72px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+          <sc-for list="{{ devos }}" as="d" hint-placeholder-count="6">
+            <button onClick="{{ d.open }}" style="text-align:left;background:#fff;border:1px solid #e6dcc9;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#c28a2b;">
+              <div style="height:200px;background:#0f2f4c center/cover no-repeat;background-image:{{ d.bg }};overflow:hidden;"></div>
+              <div style="padding:20px 22px 24px;display:flex;flex-direction:column;flex:1;">
+                <div style="font-size:12px;color:#b98a2e;letter-spacing:1.5px;font-weight:700;">{{ d.date }}</div>
+                <h3 style="font-family:'Spectral',serif;font-size:20px;font-weight:600;color:#16202b;margin-top:10px;line-height:1.25;">{{ d.title }}</h3>
+                <p style="color:#5c626b;font-size:14.5px;line-height:1.6;margin-top:10px;">{{ d.excerpt }}</p>
+                <div style="margin-top:auto;padding-top:16px;font-size:13px;color:#6a6f78;">By {{ d.author }} · <span style="color:#1f5c8b;font-weight:600;">Read →</span></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- ============ ARTICLE DETAIL (Manna + News) ============ -->
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <article style="background:#fffdf9;">
+      <div style="position:relative;background:#0f2f4c;overflow:hidden;">
+        <div style="position:absolute;inset:0;background-position:center;background-size:cover;background-image:{{ article.bg }};opacity:.28;"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,38,62,.6),rgba(12,38,62,.94));"></div>
+        <div style="position:relative;max-width:760px;margin:0 auto;padding:clamp(40px,6vw,72px) 24px clamp(44px,7vw,64px);">
+          <button onClick="{{ article.back }}" style="color:#e6c886;font-size:13.5px;font-weight:600;margin-bottom:22px;">← {{ article.backLabel }}</button>
+          <div style="font-size:11.5px;letter-spacing:2.4px;color:#e6c886;font-weight:700;">{{ article.kicker }} · {{ article.date }}</div>
+          <h1 style="font-family:'Spectral',serif;font-size:clamp(28px,4.2vw,46px);font-weight:600;color:#fff;margin-top:14px;line-height:1.12;">{{ article.title }}</h1>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:22px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:#c28a2b;color:#10233a;display:flex;align-items:center;justify-content:center;font-weight:700;">{{ article.authorInit }}</div>
+            <div style="color:#cdd9e4;font-size:14px;">By <span style="color:#fff;font-weight:600;">{{ article.author }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="max-width:720px;margin:0 auto;padding:clamp(40px,6vw,64px) 24px;">
+        <sc-if value="{{ article.hasVerse }}" hint-placeholder-val="{{ false }}">
+          <div style="border-left:3px solid #c28a2b;background:#f8f3e9;padding:20px 24px;border-radius:0 12px 12px 0;margin-bottom:34px;">
+            <div style="font-family:'Spectral',serif;font-style:italic;font-size:19px;color:#0f2f4c;line-height:1.5;">{{ article.verse }}</div>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <sc-for list="{{ article.blocks }}" as="blk" hint-placeholder-count="6">
+            <sc-if value="{{ blk.isH }}" hint-placeholder-val="{{ false }}"><h3 style="font-family:'Spectral',serif;font-size:23px;font-weight:600;color:#16202b;margin-top:8px;">{{ blk.text }}</h3></sc-if>
+            <sc-if value="{{ blk.isQuote }}" hint-placeholder-val="{{ false }}"><blockquote style="margin:0;font-family:'Spectral',serif;font-style:italic;font-size:20px;line-height:1.5;color:#0f2f4c;padding:6px 0 6px 22px;border-left:3px solid #e0c197;">{{ blk.text }}</blockquote></sc-if>
+            <sc-if value="{{ blk.isP }}" hint-placeholder-val="{{ true }}"><p style="font-size:17.5px;line-height:1.75;color:#2f353d;text-wrap:pretty;">{{ blk.text }}</p></sc-if>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ article.hasReflection }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:44px;background:#f8f3e9;border:1px solid #e6dcc9;border-radius:16px;padding:30px 30px 34px;">
+            <div style="font-size:12px;letter-spacing:2.4px;color:#b98a2e;font-weight:700;">REFLECTION &amp; DISCUSSION</div>
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px;">
+              <sc-for list="{{ article.reflection }}" as="q" hint-placeholder-count="4">
+                <div style="display:flex;gap:14px;">
+                  <div style="font-family:'Spectral',serif;font-size:20px;font-weight:700;color:#c28a2b;flex-shrink:0;">{{ q.n }}</div>
+                  <p style="font-size:15.5px;line-height:1.6;color:#2f353d;">{{ q.text }}</p>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:26px;padding-top:22px;border-top:1px solid #e6dcc9;">
+              <div style="font-size:12px;letter-spacing:2.4px;color:#b98a2e;font-weight:700;">CHALLENGE FOR THIS WEEK</div>
+              <p style="font-size:16px;line-height:1.7;color:#2f353d;margin-top:10px;">{{ article.challenge }}</p>
+              <p style="font-size:13.5px;color:#8a8f98;margin-top:16px;">Further reading: {{ article.passages }}</p>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:40px;padding-top:26px;border-top:1px solid #eee3d1;display:flex;align-items:center;flex-wrap:wrap;gap:14px;">
+          <span style="font-size:13px;color:#8a8f98;font-weight:600;">Share this article</span>
+          <div style="display:flex;gap:9px;">
+            <sc-for list="{{ shareLinks }}" as="s" hint-placeholder-count="3">
+              <button onClick="{{ s.onClick }}" style="width:38px;height:38px;border-radius:9px;background:#f0e8d8;display:flex;align-items:center;justify-content:center;color:#0f2f4c;font-weight:700;font-size:13px;" style-hover="background:#e5d8bd;">{{ s.label }}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ shareCopied }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#2f7d46;font-weight:600;">Link copied ✓</span></sc-if>
+          <button onClick="{{ article.back }}" style="margin-left:auto;color:#1f5c8b;font-weight:600;font-size:14px;">{{ article.backLabel }} →</button>
+        </div>
+      </div>
+    </article>
+  </sc-if>
+
+  <!-- ============ EVENTS ============ -->
+  <sc-if value="{{ isEvents }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#0f2f4c;padding:clamp(52px,7vw,84px) 24px;">
+      <div style="max-width:1220px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:3px;color:#e6c886;font-weight:700;">GATHER &amp; GROW</div>
+        <h1 style="font-family:'Spectral',serif;font-size:clamp(34px,5vw,56px);font-weight:600;color:#fff;margin-top:12px;">Events</h1>
+        <p style="color:#cdd9e4;font-size:clamp(16px,1.8vw,20px);line-height:1.6;max-width:60ch;margin-top:18px;">Summits, forums, trainings and prayer gatherings across Africa and the global CBMC movement.</p>
+      </div>
+    </section>
+    <section style="background:#f8f3e9;padding:clamp(44px,6vw,72px) 24px;">
+      <div style="max-width:1000px;margin:0 auto;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
+          <sc-for list="{{ eventFilters }}" as="f" hint-placeholder-count="3">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <sc-for list="{{ events }}" as="e" hint-placeholder-count="5">
+            <div style="background:#fffdf9;border:1px solid #e6dcc9;border-radius:16px;padding:22px 24px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;">
+              <div style="width:88px;flex-shrink:0;text-align:center;background:#0f2f4c;border-radius:12px;padding:14px 0;color:#fff;">
+                <div style="font-size:11px;letter-spacing:1.5px;color:#e6c886;font-weight:700;">{{ e.mon }}</div>
+                <div style="font-family:'Spectral',serif;font-size:30px;font-weight:700;line-height:1;margin-top:2px;">{{ e.day }}</div>
+                <div style="font-size:11px;color:#9fb3c6;margin-top:2px;">{{ e.year }}</div>
+              </div>
+              <div style="flex:1;min-width:200px;">
+                <span style="font-size:11px;letter-spacing:1.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:{{ e.tagBg }};color:{{ e.tagColor }};">{{ e.category }}</span>
+                <h3 style="font-family:'Spectral',serif;font-size:21px;font-weight:600;color:#16202b;margin-top:11px;">{{ e.title }}</h3>
+                <p style="color:#5c626b;font-size:14px;margin-top:6px;">📍 {{ e.location }} · {{ e.dates }}</p>
+              </div>
+              <button onClick="{{ e.open }}" style="background:#f0e8d8;color:#0f2f4c;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:9px;flex-shrink:0;" style-hover="background:#e5d8bd;">Details</button>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ eventsEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:40px;color:#9aa0a8;">No events in this category.</div></sc-if>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- ============ DONATE ============ -->
+  <sc-if value="{{ isDonate }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#0f2f4c;padding:clamp(52px,7vw,84px) 24px;">
+      <div style="max-width:820px;margin:0 auto;">
+        <div style="font-size:12px;letter-spacing:3px;color:#e6c886;font-weight:700;">GIVE</div>
+        <h1 style="font-family:'Spectral',serif;font-size:clamp(32px,5vw,52px);font-weight:600;color:#fff;margin-top:12px;line-height:1.08;">Support marketplace ministry across Africa.</h1>
+        <p style="color:#cdd9e4;font-size:clamp(16px,1.8vw,20px);line-height:1.6;margin-top:18px;">Every gift helps establish and strengthen CBMC national teams — equipping business and professional men and women to carry the Gospel into their workplaces.</p>
+      </div>
+    </section>
+    <section style="background:#f8f3e9;padding:clamp(44px,6vw,72px) 24px;">
+      <div style="max-width:640px;margin:0 auto;background:#fffdf9;border:1px solid #e6dcc9;border-radius:18px;padding:32px;">
+        <sc-if value="{{ donateDone }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:20px 6px;">
+            <div style="width:60px;height:60px;border-radius:50%;background:#e7f2e9;color:#2f7d46;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto;">✓</div>
+            <h3 style="font-family:'Spectral',serif;font-size:26px;font-weight:600;color:#16202b;margin-top:18px;">Thank you for your gift!</h3>
+            <p style="color:#5c626b;font-size:15.5px;line-height:1.6;margin-top:10px;">Your {{ donateSummary }} gift of <strong style="color:#0f2f4c;">{{ donateFinalAmount }}</strong> will help strengthen CBMC teams across Africa. A receipt is on its way to your inbox.</p>
+            <button onClick="{{ resetDonate }}" style="margin-top:22px;background:#0f2f4c;color:#fff;font-weight:600;font-size:14.5px;padding:13px 26px;border-radius:10px;">Make another gift</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ donateForm }}" hint-placeholder-val="{{ true }}">
+          <div style="font-family:'Spectral',serif;font-size:22px;font-weight:600;color:#16202b;">Choose an amount</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px;">
+            <sc-for list="{{ amounts }}" as="a" hint-placeholder-count="6">
+              <button onClick="{{ a.onClick }}" style="{{ a.style }}">{{ a.label }}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:14px;display:flex;align-items:center;gap:10px;border:1px solid #d9cdb5;border-radius:10px;padding:0 14px;background:#fff;">
+              <span style="font-family:'Spectral',serif;font-size:20px;color:#0f2f4c;">$</span>
+              <input value="{{ donateCustom }}" onChange="{{ onCustom }}" inputMode="numeric" placeholder="Enter amount" style="flex:1;border:none;outline:none;padding:14px 0;font-size:16px;background:none;">
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:12px;margin-top:20px;">
+            <button onClick="{{ setOnce }}" style="{{ onceStyle }}">One-time</button>
+            <button onClick="{{ setMonthly }}" style="{{ monthlyStyle }}">Monthly</button>
+          </div>
+          <button onClick="{{ checkout }}" style="width:100%;margin-top:22px;background:#c28a2b;color:#10233a;font-weight:700;font-size:16px;padding:15px;border-radius:10px;" style-hover="background:#a9761f;">{{ checkoutLabel }}</button>
+          <sc-if value="{{ donateError }}" hint-placeholder-val="{{ false }}"><p style="text-align:center;font-size:13px;color:#b5451f;margin-top:12px;font-weight:600;">Please choose or enter an amount to continue.</p></sc-if>
+          <p style="text-align:center;font-size:12.5px;color:#9aa0a8;margin-top:14px;">CBMC Africa · Joseph Kabwe Road, No 32, PHI, Lusaka</p>
+        </sc-if>
+      </div>
+    </section>
+  </sc-if>
+
+  </main>
+
+  <!-- ============ EVENT DETAIL MODAL ============ -->
+  <sc-if value="{{ eventModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeEvent }}" style="position:fixed;inset:0;z-index:70;background:rgba(8,20,32,.6);display:flex;align-items:center;justify-content:center;padding:24px;">
+      <div onClick="{{ stop }}" style="width:100%;max-width:520px;background:#fffdf9;border-radius:18px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+        <div style="background:#0f2f4c;padding:24px 26px;position:relative;">
+          <button onClick="{{ closeEvent }}" style="position:absolute;top:16px;right:18px;font-size:24px;color:#e6c886;line-height:1;">×</button>
+          <span style="font-size:11px;letter-spacing:1.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:{{ eventModal.tagBg }};color:{{ eventModal.tagColor }};">{{ eventModal.category }}</span>
+          <h3 style="font-family:'Spectral',serif;font-size:25px;font-weight:600;color:#fff;margin-top:14px;line-height:1.2;">{{ eventModal.title }}</h3>
+          <p style="color:#cdd9e4;font-size:14px;margin-top:10px;">📍 {{ eventModal.location }} · {{ eventModal.dates }}</p>
+        </div>
+        <div style="padding:24px 26px;overflow:auto;">
+          <sc-if value="{{ eventRegistered }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:16px 6px;">
+              <div style="width:54px;height:54px;border-radius:50%;background:#e7f2e9;color:#2f7d46;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto;">✓</div>
+              <div style="font-family:'Spectral',serif;font-size:20px;font-weight:600;margin-top:14px;">You're registered!</div>
+              <p style="color:#5c626b;font-size:14px;margin-top:8px;line-height:1.55;">We've saved your spot for {{ eventModal.title }}. Details are on the way to your email.</p>
+              <button onClick="{{ closeEvent }}" style="margin-top:18px;background:#0f2f4c;color:#fff;font-weight:600;font-size:14px;padding:11px 22px;border-radius:9px;">Close</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ eventDetail }}" hint-placeholder-val="{{ true }}">
+            <p style="color:#3a4048;font-size:15px;line-height:1.7;">{{ eventModal.description }}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+              <sc-for list="{{ eventModal.facts }}" as="ft" hint-placeholder-count="4">
+                <div style="background:#f8f3e9;border:1px solid #eee3d1;border-radius:10px;padding:12px 14px;">
+                  <div style="font-size:11px;letter-spacing:1px;color:#9a7a3a;font-weight:700;text-transform:uppercase;">{{ ft.label }}</div>
+                  <div style="font-size:14px;color:#22303f;font-weight:600;margin-top:3px;">{{ ft.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ registerEvent }}" style="width:100%;margin-top:22px;background:#c28a2b;color:#10233a;font-weight:700;font-size:15px;padding:14px;border-radius:10px;" style-hover="background:#a9761f;">Register for this event</button>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ FOOTER ============ -->
+  <footer style="background:#0b2136;color:#c6d2df;padding:clamp(48px,6vw,68px) 24px 0;">
+    <div style="max-width:1220px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:36px;padding-bottom:44px;">
+      <div style="min-width:230px;">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <span style="width:38px;height:38px;border-radius:9px;background:#c28a2b;color:#10233a;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;font-weight:700;font-size:17px;">C.</span>
+          <span style="font-family:'Spectral',serif;font-weight:700;font-size:20px;color:#fff;">CBMC Africa</span>
+        </div>
+        <p style="font-size:14px;line-height:1.7;margin-top:16px;max-width:34ch;color:#9fb3c6;">An interdenominational, evangelical Christian organization comprised of national associations around Africa.</p>
+      </div>
+      <div>
+        <div style="font-size:12px;letter-spacing:2px;color:#e6c886;font-weight:700;">EXPLORE</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+          <button onClick="{{ goHome }}" style="text-align:left;color:#c6d2df;font-size:14.5px;" style-hover="color:#fff;">Home</button>
+          <button onClick="{{ goAbout }}" style="text-align:left;color:#c6d2df;font-size:14.5px;" style-hover="color:#fff;">About us</button>
+          <button onClick="{{ goManna }}" style="text-align:left;color:#c6d2df;font-size:14.5px;" style-hover="color:#fff;">Monday Manna</button>
+          <button onClick="{{ goEvents }}" style="text-align:left;color:#c6d2df;font-size:14.5px;" style-hover="color:#fff;">Events</button>
+          <button onClick="{{ goDonate }}" style="text-align:left;color:#c6d2df;font-size:14.5px;" style-hover="color:#fff;">Give</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;letter-spacing:2px;color:#e6c886;font-weight:700;">CONNECT ACROSS AFRICA</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+          <sc-for list="{{ regions }}" as="r" hint-placeholder-count="5">
+            <span style="color:#9fb3c6;font-size:14.5px;">{{ r }}</span>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;letter-spacing:2px;color:#e6c886;font-weight:700;">CONTACT</div>
+        <div style="font-size:14.5px;line-height:1.9;margin-top:16px;color:#9fb3c6;">
+          Joseph Kabwe Road, No 32<br>PHI, Lusaka, Zambia<br>+260 211 284102<br>info@cbmcafrica.com
+        </div>
+      </div>
+    </div>
+    <div style="max-width:1220px;margin:0 auto;border-top:1px solid rgba(255,255,255,.08);padding:20px 0;display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:12.5px;color:#7f93a6;">
+      <span>© 2026 CBMC Africa. All rights reserved.</span>
+      <button onClick="{{ goAdmin }}" style="margin-left:auto;color:#7f93a6;font-size:12.5px;" style-hover="color:#e6c886;">Staff login →</button>
+    </div>
+  </footer>
+
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startPage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;about&quot;,&quot;manna&quot;,&quot;detail&quot;,&quot;events&quot;,&quot;donate&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = {
+      page: props.startPage || 'home', articleId: 'd1', articleType: 'devo',
+      subscribed:false, w: 1200, menuOpen:false,
+      adminSel:'dash', adminSearch:'',
+      composeOpen:false, composeStep:'form', compose:{ title:'', author:'', body:'' }, extraPosts:[],
+      mannaEmail:true,
+      eventIdx:null, eventRegistered:false,
+      eventFilter:'ALL',
+      donateAmount:'$100', donateFreq:'once', donateCustom:'', donateDone:false, donateError:false,
+      shareCopied:false
+    };
+  }
+  componentDidMount(){
+    this._onResize = () => this.setState({ w: window.innerWidth });
+    this._onResize();
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount(){ window.removeEventListener('resize', this._onResize); }
+
+  go(p){ this.setState({ page:p, menuOpen:false }); if(typeof window!=='undefined') window.scrollTo(0,0); }
+  openArticle(id, type){ this.setState({ page:'detail', articleId:id, articleType:type||'devo', menuOpen:false, shareCopied:false }); if(typeof window!=='undefined') window.scrollTo(0,0); }
+
+  get devotionals(){
+    return [
+      { id:'d1', title:'The Unparalleled Power of Perseverance', author:'Robert J. Tamasy', authorInit:'RT', date:'JULY 20, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-062926-1hoGDN.webp',
+        excerpt:'We could cite many ingredients that contribute to success, but one common contributing factor is perseverance.',
+        verse:'“…suffering produces perseverance; perseverance, character; and character, hope.” — Romans 5:3–4',
+        blocks:[
+          {t:'p',x:'Perseverance. We could cite many ingredients that contribute to success — for individuals as well as businesses and organizations — but one common contributing factor is perseverance. Whether acquiring skills for a job, building a career, developing a product, or earning recognition, perseverance is invaluable.'},
+          {t:'p',x:'We might cite traits like patience and endurance, but perseverance is different. Patience is the willingness to bide our time until the desired outcome arrives. Endurance is hanging on until the very end. Perseverance, however, is a far more active response to our circumstances.'},
+          {t:'q',x:'“A saint’s life is in the hands of God like a bow and arrow in the hands of an archer… He goes on stretching until His purpose is in sight, and then He lets the arrow fly.” — Oswald Chambers'},
+          {t:'p',x:'Have you ever been stretched to what seemed the breaking point, uncertain you could survive? Times like that are when perseverance is most critical — especially for those of us who desire to integrate our faith into what we do in the marketplace.'},
+          {t:'h',x:'Recognize the products of perseverance'},
+          {t:'p',x:'During adversity, all we can see are the present problems. But God uses our circumstances to mold and shape us into the people He wants us to become: “…we also rejoice in our sufferings, because we know that suffering produces perseverance; perseverance, character; and character, hope” (Romans 5:3-4).'},
+          {t:'h',x:'Understand that perseverance develops us'},
+          {t:'p',x:'Many of life’s best lessons are learned as we persevere through trials: “Consider it pure joy… whenever you face trials of many kinds, because you know that the testing of your faith develops perseverance” (James 1:2-4).'},
+          {t:'h',x:'Maintain focus on the goal'},
+          {t:'p',x:'The path to accomplishment is rarely a straight line. “Therefore, my dear brothers, stand firm. Let nothing move you… because you know that your labor in the Lord is not in vain” (1 Corinthians 15:58).'}
+        ],
+        reflection:[
+          'How would you distinguish between patience, endurance, and perseverance? How are they similar — and how are they different?',
+          'Think of a time when you were required to persevere, when problems were not quickly resolved. How did you respond?',
+          'In what ways can trust in God help you persevere through hardship, believing the outcome will be greater than you hoped?',
+          'Why does suffering often cause us to question God’s goodness? What would the world be like with no difficulty to work through?'
+        ],
+        challenge:'Is there something in your life or work that is demanding perseverance right now? Share what you are going through with trusted friends, a mentor, or your CBMC group — and ask them to support you in prayer.',
+        passages:'Deuteronomy 31:8 · Proverbs 3:5-6 · Isaiah 40:31, 41:10 · Jeremiah 33:3 · Ephesians 3:20' },
+
+      { id:'d2', title:'The Conviction That Outlasts the Crisis', author:'C.C. Simpson', authorInit:'CS', date:'JULY 13, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-060826-VZEVE2.webp',
+        excerpt:'It is Monday. The quarterly numbers are bad. A key client just walked. What do you actually believe when everything is shaking?',
+        verse:'“We are afflicted in every way, but not crushed; perplexed, but not driven to despair.” — 2 Corinthians 4:8',
+        blocks:[
+          {t:'p',x:'It is Monday. The quarterly numbers are bad. A key client just walked. The team is running on fumes. And somewhere underneath the pressure to perform, a quieter question surfaces: what do I actually believe when everything is shaking?'},
+          {t:'p',x:'Convictions formed in the calm are tested in the crisis. The marketplace has a way of exposing whether our faith is a decoration or a foundation. The follower of Christ is not promised the absence of storms — but a presence within them.'},
+          {t:'p',x:'This week, name the conviction you return to when results disappoint. Write it down. Share it with your C3 team. Let it steady you before the next hard Monday arrives.'}
+        ], reflection:[], challenge:'', passages:'' },
+
+      { id:'d3', title:'The Beauty of Joy-Filled Work', author:'Rick Boxx', authorInit:'RB', date:'JULY 6, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-061526-BkjsF1.webp',
+        excerpt:'My great-grandfather was primarily a roofer and a part-time farmer. He loved to work hard and enjoy life.',
+        verse:'“Whatever you do, work at it with all your heart, as working for the Lord.” — Colossians 3:23',
+        blocks:[
+          {t:'p',x:'My great-grandfather lived into his mid-90s. Wade was primarily a roofer and a part-time farmer. He loved to work hard and to enjoy life — and he rarely separated the two.'},
+          {t:'p',x:'Scripture treats work not as a curse to escape but as a calling to steward. When we bring gratitude and excellence to ordinary tasks, our workplaces become places where the goodness of God is quietly on display.'},
+          {t:'p',x:'Where has work become joyless for you? Ask God to renew your sense of purpose in the very tasks you are tempted to resent.'}
+        ], reflection:[], challenge:'', passages:'' },
+
+      { id:'d4', title:'Anger Is Not Your Friend', author:'Robert J. Tamasy', authorInit:'RT', date:'JUNE 29, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-062926-1hoGDN.webp',
+        excerpt:'Have you noticed how angry people seem to be these days? Anger, it seems, has become a default posture.',
+        verse:'“In your anger do not sin: Do not let the sun go down while you are still angry.” — Ephesians 4:26',
+        blocks:[
+          {t:'p',x:'Have you noticed how angry people seem to be these days? Protesters shouting on the streets, commentators trading insults, colleagues bristling in the next cubicle. Anger, it seems, has become a default posture.'},
+          {t:'p',x:'Anger is not inherently sinful — even Jesus was angered by injustice. But unmanaged anger is a poor advisor and an expensive companion in the workplace. “In your anger do not sin” (Ephesians 4:26).'},
+          {t:'p',x:'This week, notice what triggers your anger at work. Pause before you respond. Ask whether your reaction reflects the character of Christ you hope others will see in you.'}
+        ], reflection:[], challenge:'', passages:'' },
+
+      { id:'d5', title:'Sticks and Stones Can Hurt — But So Can Words', author:'Robert J. Tamasy', authorInit:'RT', date:'JUNE 8, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/03/peace-is-precious-fNPOYG.png',
+        excerpt:'Most of us learned that childhood rhyme — and most of us discovered it was not true.',
+        verse:'“The tongue has the power of life and death.” — Proverbs 18:21',
+        blocks:[
+          {t:'p',x:'“Sticks and stones may break my bones, but words will never hurt me.” Most of us learned that rhyme as children — and most of us discovered it was not true.'},
+          {t:'p',x:'Words carry enormous power in the marketplace. A careless comment can wound a colleague for years; an encouraging one can change the trajectory of a career. “The tongue has the power of life and death” (Proverbs 18:21).'},
+          {t:'p',x:'Choose one person this week and speak life to them — specific, sincere, and unhurried. Notice what your words build.'}
+        ], reflection:[], challenge:'', passages:'' },
+
+      { id:'d6', title:'Your Output Is Not His Mission', author:'Robert J. Tamasy', authorInit:'RT', date:'JUNE 15, 2026',
+        image:'https://cbmcafrica.org/wp-content/uploads/2026/05/article-blk-and-white-6mKy0b.png',
+        excerpt:'The pressure to produce can quietly convince us that our output is our identity.',
+        verse:'“You did not choose me, but I chose you and appointed you so that you might go and bear fruit.” — John 15:16',
+        blocks:[
+          {t:'p',x:'The report is due. The pipeline is thin. The pressure to produce can quietly convince us that our output is our identity — and that God’s mission for us is measured in deliverables.'},
+          {t:'p',x:'But you are more than what you produce. Your assignment in the marketplace is not merely to generate results; it is to represent Christ among the people only you can reach.'},
+          {t:'p',x:'This week, consider your unique sphere of influence. Regardless of your title, you have access to people no one else has. Ask God how He might use you there.'}
+        ], reflection:[], challenge:'', passages:'' }
+    ];
+  }
+
+  get newsData(){ return [
+    { id:'n1', title:'Q2 2026 Video Newsletter is LIVE!', author:'CBMC International', date:'JULY 10, 2026', image:'https://cbmcafrica.org/wp-content/uploads/2026/06/img_1644-fzMJOl.webp', excerpt:'Six regions. One mission. Our latest video takes you around the CBMC movement in about five minutes.',
+      blocks:['Six regions. One mission. The Q2 2026 CBMC International Video Newsletter takes you around the movement in about five minutes — from leadership trainings in Central Africa to new Connect3 teams forming in Asia-Pacific.','You will hear directly from national leaders about what God is doing in their marketplaces, and how prayer, evangelism and discipleship continue to anchor everything we do.','Share the video with your team and use it to spark a conversation about how the Gospel is moving through the marketplace where you work.'] },
+    { id:'n2', title:'Ten Years of CBMC Cameroon', author:'CBMC International', date:'JUNE 8, 2026', image:'https://cbmcafrica.org/wp-content/uploads/2026/06/img_1644-fzMJOl.webp', excerpt:'From a single leadership training in Lagos to a disciple-making movement reaching across Central Africa.',
+      blocks:['A decade ago, CBMC Cameroon began with a single leadership training. Today it is a disciple-making movement reaching business and professional men and women across Central Africa.','The anniversary gathering celebrated the leaders raised up, the Connect3 teams multiplied, and the many colleagues who have come to faith in the marketplace over ten years.','What began as a seed has become a network — a reminder that faithful, consistent ministry compounds over time.'] },
+    { id:'n3', title:'Returning to the Center: Why Evangelism Still Defines Our Mission', author:'C.C. Simpson', date:'MAY 6, 2026', image:'https://cbmcafrica.org/wp-content/uploads/2026/05/article-blk-and-white-6mKy0b.png', excerpt:'Across the globe, God is on the move in the marketplace — and the momentum is building.',
+      blocks:['Across the globe, God is on the move in the marketplace — and the momentum is building. Yet momentum can quietly drift from its center if we are not intentional.','For CBMC, evangelism is not one program among many; it is the center of gravity. Our teams, our prayer, and our discipleship all exist to help business people introduce their colleagues to Jesus Christ.','This article is a call to return to that center — to let the love of God once again compel us toward the people we work with every day.'] },
+    { id:'n4', title:'The Q1 2026 CBMC International Video Newsletter is LIVE!', author:'CBMC International', date:'APRIL 8, 2026', image:'https://cbmcafrica.org/wp-content/uploads/2026/04/image-4-6-26-at-12.45-pm-scaled-O2h7yO.png', excerpt:'From the USA and Asia-Pacific to Latin America, Europe, and Africa, lives are being changed.',
+      blocks:['From the USA and Asia-Pacific to Latin America, Europe, and Africa, lives are being changed through marketplace ministry. The Q1 2026 video newsletter gathers those stories in one place.','Watch to see how national teams are equipping ambassadors for Christ, and how the global CBMC family continues to grow across cultures and continents.'] }
+  ]; }
+
+  get eventsData(){
+    const afr = { category:'AFRICA', tagBg:'#eadfc7', tagColor:'#8a6a1e' };
+    const intl = { category:'INTERNATIONAL', tagBg:'#dbe6f0', tagColor:'#1f5c8b' };
+    return [
+      { ...afr, mon:'SEP', day:'18', year:'2026', title:'CBMC Africa Regional Leadership Summit', location:'Lusaka, Zambia', dates:'Sep 18–20, 2026', time:'8:30 AM – 5:00 PM', format:'In person', cost:'$120', host:'CBMC Africa',
+        description:'Three days of vision-casting, training and fellowship for national and regional CBMC leaders across the continent. Sessions cover team multiplication, Operation Timothy discipleship, and Connect3 group leadership, with dedicated time for prayer and regional planning.' },
+      { ...afr, mon:'OCT', day:'09', year:'2026', title:'Connect3 (C3) Marketplace Forum', location:'Nairobi, Kenya', dates:'Oct 9, 2026', time:'6:30 AM – 9:00 AM', format:'Breakfast forum', cost:'Free', host:'CBMC Kenya',
+        description:'A morning forum for business and professional people exploring what it means to connect to God and one another in the marketplace. Includes a keynote, table discussion, and an introduction to joining or starting a Connect3 team in your city.' },
+      { ...afr, mon:'OCT', day:'24', year:'2026', title:'West Africa Prayer Breakfast', location:'Accra, Ghana', dates:'Oct 24, 2026', time:'7:00 AM – 9:30 AM', format:'Breakfast', cost:'Free', host:'CBMC Ghana',
+        description:'Business leaders gather to pray for the nation, the marketplace, and one another. A simple, powerful morning built around intercession and encouragement for those carrying their faith into work.' },
+      { ...afr, mon:'NOV', day:'07', year:'2026', title:'Operation Timothy Facilitator Training', location:'Lagos, Nigeria', dates:'Nov 7, 2026', time:'9:00 AM – 4:00 PM', format:'Workshop', cost:'$45', host:'CBMC Nigeria',
+        description:'A hands-on training equipping facilitators to disciple new believers and growing Christians using the Operation Timothy curriculum. Ideal for anyone ready to walk alongside a colleague one-to-one.' },
+      { ...intl, mon:'NOV', day:'20', year:'2026', title:'Q4 2026 CBMC International Gathering', location:'Online · Global', dates:'Nov 20, 2026', time:'3:00 PM GMT', format:'Online', cost:'Free', host:'CBMC International',
+        description:'A global video gathering of the CBMC family, celebrating stories from every region and looking ahead to the year to come. Join from anywhere in the world.' },
+      { ...afr, mon:'DEC', day:'05', year:'2026', title:'Marketplace Ambassadors Conference', location:'Cape Town, South Africa', dates:'Dec 5–6, 2026', time:'8:00 AM – 6:00 PM', format:'Conference', cost:'$150', host:'CBMC South Africa',
+        description:'A two-day conference for those who want to be intentional ambassadors for Christ at work. Speakers, workshops and networking focused on integrating faith and profession with integrity and impact.' }
+    ];
+  }
+
+  navStyle(active){
+    const base = 'font-size:14px;font-weight:600;padding:9px 14px;border-radius:8px;';
+    return active ? base+'color:#0f2f4c;background:#f0e8d8;' : base+'color:#454b54;background:transparent;';
+  }
+  adminItemStyle(active){
+    const base = 'display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 22px;font-size:13.5px;font-weight:600;';
+    return active ? base+'color:#fff;background:rgba(215,161,63,.14);border-left:3px solid #d7a13f;padding-left:19px;' : base+'color:#9fb3c6;border-left:3px solid transparent;';
+  }
+  amountBtnStyle(active){
+    return active ? 'padding:16px;border-radius:10px;border:2px solid #c28a2b;background:#faf1de;color:#0f2f4c;font-weight:700;font-size:16px;'
+                  : 'padding:16px;border-radius:10px;border:1px solid #d9cdb5;background:#fff;color:#0f2f4c;font-weight:600;font-size:16px;';
+  }
+  freqStyle(active){
+    return active ? 'flex:1;padding:12px;border-radius:9px;background:#0f2f4c;color:#fff;font-weight:600;font-size:14px;'
+                  : 'flex:1;padding:12px;border-radius:9px;background:#f0e8d8;color:#5c626b;font-weight:600;font-size:14px;';
+  }
+  filterStyle(active){
+    return active ? 'font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;background:#0f2f4c;color:#fff;'
+                  : 'font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e6dcc9;color:#5c626b;';
+  }
+
+  submitCompose(e){
+    if(e&&e.preventDefault) e.preventDefault();
+    const c = this.state.compose;
+    if(!c.title || !c.author) return;
+    const row = { title:c.title, author:c.author, date:'—', status:'Draft' };
+    this.setState(s => ({ extraPosts:[row, ...s.extraPosts], composeStep:'done' }));
+  }
+  checkout(){
+    const amt = this.donateFinalAmount();
+    if(!amt){ this.setState({ donateError:true }); return; }
+    this.setState({ donateDone:true, donateError:false });
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+  }
+  donateFinalAmount(){
+    if(this.state.donateAmount === 'Other'){
+      const n = parseFloat(String(this.state.donateCustom).replace(/[^0-9.]/g,''));
+      return (n && n>0) ? '$'+n : '';
+    }
+    return this.state.donateAmount;
+  }
+  doShare(kind){
+    if(kind==='copy' && typeof navigator!=='undefined' && navigator.clipboard){
+      navigator.clipboard.writeText(typeof window!=='undefined' ? window.location.href : 'cbmcafrica.org').catch(()=>{});
+    }
+    this.setState({ shareCopied:true });
+    setTimeout(()=>this.setState({ shareCopied:false }), 2200);
+  }
+
+  renderVals(){
+    const p = this.state.page;
+    const st = this.state;
+
+    // ---- Article detail (devotional or news) ----
+    const devos = this.devotionals.map(d => ({
+      ...d, open: () => this.openArticle(d.id,'devo'), bg: d.image ? 'url("'+d.image+'")' : 'none',
+      blocks: d.blocks.map(b => ({ isP:b.t==='p', isQuote:b.t==='q', isH:b.t==='h', text:b.x }))
+    }));
+    const newsRaw = this.newsData;
+    const news = newsRaw.map(a => ({ ...a, open: () => this.openArticle(a.id,'news'), bg: a.image ? 'url("'+a.image+'")' : 'none' }));
+
+    let article;
+    if(st.articleType === 'news'){
+      const a = newsRaw.find(n => n.id === st.articleId) || newsRaw[0];
+      article = {
+        ...a, kicker:'NEWS', authorInit:(a.author||'C').slice(0,2).toUpperCase(),
+        hasVerse:false, hasReflection:false, reflection:[],
+        blocks: a.blocks.map(x => ({ isP:true, isQuote:false, isH:false, text:x })),
+        back:()=>this.go('home'), backLabel:'Back to news'
+      };
+      article.bg = article.image ? 'url("'+article.image+'")' : 'none';
+    } else {
+      const d = this.devotionals.find(x => x.id === st.articleId) || this.devotionals[0];
+      article = {
+        ...d, kicker:'MONDAY MANNA',
+        hasVerse:true, hasReflection: d.reflection.length > 0,
+        blocks: d.blocks.map(b => ({ isP:b.t==='p', isQuote:b.t==='q', isH:b.t==='h', text:b.x })),
+        reflection: d.reflection.map((t,i) => ({ n:i+1, text:t })),
+        back:()=>this.go('manna'), backLabel:'Back to Monday Manna'
+      };
+      article.bg = article.image ? 'url("'+article.image+'")' : 'none';
+    }
+    const shareLinks = [
+      { label:'f', onClick:()=>this.doShare('fb') },
+      { label:'in', onClick:()=>this.doShare('li') },
+      { label:'⧉', onClick:()=>this.doShare('copy') }
+    ];
+
+    // ---- Public nav ----
+    const nav = [
+      { label:'Home', onClick:()=>this.go('home'), style:this.navStyle(p==='home') },
+      { label:'About', onClick:()=>this.go('about'), style:this.navStyle(p==='about') },
+      { label:'Monday Manna', onClick:()=>this.go('manna'), style:this.navStyle(p==='manna'||(p==='detail'&&st.articleType==='devo')) },
+      { label:'Events', onClick:()=>this.go('events'), style:this.navStyle(p==='events') }
+    ];
+
+    // ---- Events (with filter + modal) ----
+    const allEvents = this.eventsData.map((e,idx) => ({ ...e, idx, open:()=>this.setState({ eventIdx:idx, eventRegistered:false }) }));
+    const events = st.eventFilter==='ALL' ? allEvents : allEvents.filter(e => e.category === st.eventFilter);
+    const eventFilters = ['ALL','AFRICA','INTERNATIONAL'].map(f => ({
+      label: f==='ALL' ? 'All events' : (f.charAt(0)+f.slice(1).toLowerCase()),
+      onClick:()=>this.setState({ eventFilter:f }), style:this.filterStyle(st.eventFilter===f)
+    }));
+    const em = st.eventIdx!=null ? allEvents[st.eventIdx] : null;
+    const eventModal = em ? { ...em, facts:[
+      { label:'Date', value:em.dates }, { label:'Time', value:em.time },
+      { label:'Format', value:em.format }, { label:'Registration', value:em.cost }
+    ] } : { facts:[] };
+
+    // ---- Donate ----
+    const amountVals = ['$25','$50','$100','$250','$500','Other'];
+    const amounts = amountVals.map(label => ({ label,
+      onClick:()=>this.setState({ donateAmount:label, donateError:false }),
+      style:this.amountBtnStyle(st.donateAmount===label) }));
+    const donateFinal = this.donateFinalAmount();
+
+    // ---- Admin ----
+    const adminMeta = {
+      dash:{ title:'Dashboard', subtitle:"Welcome back, Grace — here's what's happening across CBMC Africa." },
+      pages:{ title:'Content Pages', subtitle:'Manage the static pages of the public site.' },
+      manna:{ title:'Monday Manna', subtitle:'Create, schedule and publish weekly devotionals.' },
+      news:{ title:'News & Articles', subtitle:'Featured stories from across the movement.' },
+      events:{ title:'Events', subtitle:'Summits, forums, trainings and gatherings.' },
+      resources:{ title:'Resources', subtitle:'Downloadable studies, guides and media.' },
+      subs:{ title:'Subscribers', subtitle:'People receiving the weekly Monday Manna email.' },
+      msgs:{ title:'Contact Messages', subtitle:'Enquiries submitted through the public site.' },
+      media:{ title:'Media Library', subtitle:'Images and files used across the site.' },
+      settings:{ title:'Settings', subtitle:'Organization details and site preferences.' }
+    };
+    const adminNav = [
+      { key:'dash', label:'Dashboard', dot:'#d7a13f' },
+      { key:'pages', label:'Content Pages', dot:'#6a86a0' },
+      { key:'manna', label:'Monday Manna', dot:'#6a86a0' },
+      { key:'news', label:'News & Articles', dot:'#6a86a0' },
+      { key:'events', label:'Events', dot:'#6a86a0' },
+      { key:'resources', label:'Resources', dot:'#6a86a0' },
+      { key:'subs', label:'Subscribers', dot:'#6a86a0' },
+      { key:'msgs', label:'Contact Messages', dot:'#6a86a0', badge:'7' },
+      { key:'media', label:'Media Library', dot:'#6a86a0' },
+      { key:'settings', label:'Settings', dot:'#6a86a0' }
+    ].map(a => ({ ...a, onClick:()=>this.setState({adminSel:a.key, adminSearch:''}), style:this.adminItemStyle(st.adminSel===a.key) }));
+    const withBg = (arr) => arr.map(t => ({ ...t, bg: t.src ? 'url("'+t.src+'")' : 'none' }));
+
+    const stats = [
+      { label:'Published Articles', value:'148', delta:'▲ 6 this month', deltaColor:'#2f7d46' },
+      { label:'Monday Manna', value:'96', delta:'▲ 4 this month', deltaColor:'#2f7d46' },
+      { label:'Subscribers', value:'3,420', delta:'▲ 128 this month', deltaColor:'#2f7d46' },
+      { label:'Pending Messages', value:'7', delta:'Needs response', deltaColor:'#b5451f' },
+      { label:'Upcoming Events', value:'6', delta:'Next: Sep 18', deltaColor:'#6a6f78' }
+    ];
+    const badges = {
+      Published:{ badgeBg:'#e2f0e6', badgeColor:'#2f7d46' },
+      Scheduled:{ badgeBg:'#e6eef6', badgeColor:'#1f5c8b' },
+      Draft:{ badgeBg:'#f2ead6', badgeColor:'#96701d' }
+    };
+    const basePosts = [
+      { title:'The Unparalleled Power of Perseverance', author:'R. Tamasy', date:'Jul 20, 2026', status:'Published' },
+      { title:'The Conviction That Outlasts the Crisis', author:'C.C. Simpson', date:'Jul 13, 2026', status:'Published' },
+      { title:'The Beauty of Joy-Filled Work', author:'Rick Boxx', date:'Jul 6, 2026', status:'Published' },
+      { title:'When Excellence Becomes Worship', author:'R. Tamasy', date:'Jul 27, 2026', status:'Scheduled' },
+      { title:'The Colleague You Keep Avoiding', author:'C.C. Simpson', date:'—', status:'Draft' }
+    ];
+    const allPosts = [...st.extraPosts, ...basePosts].map(x => ({ ...x, ...badges[x.status] }));
+    const dashPosts = allPosts.slice(0,5);
+
+    const messages = [
+      { initials:'JM', name:'Joseph Mwansa', email:'jmwansa@ndolatech.zm', preview:'How can our company start a C3 team in Ndola? We have about a dozen believers keen to meet weekly.', time:'2h' },
+      { initials:'AA', name:'Amara Adeyemi', email:'amara.a@lagosfin.ng', preview:'Requesting Monday Manna translation permission for Yoruba — we would love to share it locally.', time:'5h' },
+      { initials:'DT', name:'David Tembo', email:'d.tembo@coppermine.zm', preview:'Interested in the Leadership Summit sponsorship packages. Could you send details?', time:'1d' },
+      { initials:'GO', name:'Grace Okafor', email:'grace@okaforlaw.ng', preview:'Loved this week’s devotional on perseverance — sharing it with my whole office.', time:'2d' }
+    ];
+    const quickActions = [
+      { label:'📝 Publish a news article', onClick:()=>this.setState({adminSel:'news'}) },
+      { label:'📅 Add an event', onClick:()=>this.setState({adminSel:'events'}) },
+      { label:'📎 Upload a resource', onClick:()=>this.setState({adminSel:'resources'}) },
+      { label:'✉ Export subscriber list', onClick:()=>this.setState({adminSel:'subs'}) }
+    ];
+
+    // Table sections (manna, news, events, subs, pages, resources)
+    const q = st.adminSearch.trim().toLowerCase();
+    const match = (str) => !q || String(str).toLowerCase().includes(q);
+    const cell = (text, style) => ({ isText:true, isBadge:false, text, style: style||'font-weight:600;color:#22303f;' });
+    const dim  = (text) => ({ isText:true, isBadge:false, text, style:'color:#5c626b;' });
+    const badgeCell = (status) => ({ isBadge:true, isText:false, text:status, bg:badges[status].badgeBg, color:badges[status].badgeColor });
+    const rowStyle = (cols) => 'display:grid;grid-template-columns:'+cols+';gap:10px;padding:14px 20px;border-top:1px solid #f0e8d8;align-items:center;font-size:13.5px;';
+    const headStyle = (cols) => 'display:grid;grid-template-columns:'+cols+';gap:10px;padding:11px 20px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#9aa0a8;font-weight:700;background:#faf7f0;';
+
+    const editNoop = ()=>this.openCompose ? null : null;
+    let tableView = { rows:[], cols:[], heading:'', count:0, empty:false, addLabel:'+ New', onAdd:()=>{}, headStyle:headStyle('1fr'), };
+
+    if(st.adminSel==='manna'){
+      const cols = '2.4fr 1fr 1fr 0.9fr 0.7fr';
+      const rows = allPosts.filter(x => match(x.title) || match(x.author)).map(x => ({
+        rowStyle:rowStyle(cols), onEdit:()=>this.openCompose(),
+        cells:[ cell(x.title), dim(x.author), dim(x.date), badgeCell(x.status) ]
+      }));
+      tableView = { heading:'All Monday Manna', count:rows.length, cols:['Title','Author','Published','Status',''], rows, empty:rows.length===0, addLabel:'+ New Manna', onAdd:()=>this.openCompose(), headStyle:headStyle(cols) };
+    } else if(st.adminSel==='news' || st.adminSel==='pages'){
+      const isNews = st.adminSel==='news';
+      const src = isNews ? newsRaw.map(n => ({ title:n.title, author:n.author, date:n.date, status:'Published' }))
+                         : [ {title:'Home',author:'—',date:'Jun 2, 2026',status:'Published'},{title:'About Us',author:'—',date:'May 18, 2026',status:'Published'},{title:'Statement of Faith',author:'—',date:'May 18, 2026',status:'Published'},{title:'Contact',author:'—',date:'Apr 30, 2026',status:'Published'},{title:'Privacy Policy',author:'—',date:'—',status:'Draft'} ];
+      const cols = '2.4fr 1fr 1fr 0.9fr 0.7fr';
+      const rows = src.filter(x => match(x.title) || match(x.author)).map(x => ({
+        rowStyle:rowStyle(cols), onEdit:()=>{},
+        cells:[ cell(x.title), dim(x.author), dim(x.date), badgeCell(x.status) ]
+      }));
+      tableView = { heading: isNews?'News & Articles':'Content Pages', count:rows.length, cols:[isNews?'Headline':'Page',isNews?'Author':'Owner','Updated','Status',''], rows, empty:rows.length===0, addLabel:isNews?'+ New Article':'+ New Page', onAdd:()=>{}, headStyle:headStyle(cols) };
+    } else if(st.adminSel==='events'){
+      const cols = '2.2fr 1.3fr 1fr 0.9fr 0.7fr';
+      const rows = this.eventsData.filter(e => match(e.title) || match(e.location)).map(e => ({
+        rowStyle:rowStyle(cols), onEdit:()=>{},
+        cells:[ cell(e.title), dim(e.location), dim(e.dates),
+          { isBadge:true, isText:false, text:e.category, bg:e.tagBg, color:e.tagColor } ]
+      }));
+      tableView = { heading:'Upcoming Events', count:rows.length, cols:['Title','Location','Dates','Region',''], rows, empty:rows.length===0, addLabel:'+ Add Event', onAdd:()=>{}, headStyle:headStyle(cols) };
+    } else if(st.adminSel==='subs'){
+      const subs = [
+        {name:'Joseph Mwansa',email:'jmwansa@ndolatech.zm',region:'Zambia',date:'Jul 18, 2026'},
+        {name:'Amara Adeyemi',email:'amara.a@lagosfin.ng',region:'Nigeria',date:'Jul 15, 2026'},
+        {name:'David Tembo',email:'d.tembo@coppermine.zm',region:'Zambia',date:'Jul 11, 2026'},
+        {name:'Grace Okafor',email:'grace@okaforlaw.ng',region:'Nigeria',date:'Jul 9, 2026'},
+        {name:'Samuel Kimani',email:'skimani@nairobicap.ke',region:'Kenya',date:'Jul 2, 2026'},
+        {name:'Thandiwe Dube',email:'t.dube@capetownco.za',region:'South Africa',date:'Jun 28, 2026'}
+      ];
+      const cols = '1.4fr 2fr 1fr 1fr 0.7fr';
+      const rows = subs.filter(x => match(x.name) || match(x.email) || match(x.region)).map(x => ({
+        rowStyle:rowStyle(cols), onEdit:()=>{},
+        cells:[ cell(x.name), dim(x.email), dim(x.region), dim(x.date) ]
+      }));
+      tableView = { heading:'Subscribers', count:rows.length, cols:['Name','Email','Region','Joined',''], rows, empty:rows.length===0, addLabel:'↓ Export CSV', onAdd:()=>{}, headStyle:headStyle(cols) };
+    } else if(st.adminSel==='resources'){
+      const res = [
+        {title:'Operation Timothy — Book 1 (PDF)',author:'CBMC',date:'Jun 1, 2026',status:'Published'},
+        {title:'Connect3 Starter Guide',author:'CBMC Africa',date:'May 20, 2026',status:'Published'},
+        {title:'Monday Manna Archive 2025',author:'CBMC',date:'Jan 12, 2026',status:'Published'},
+        {title:'Leadership Summit Brochure 2026',author:'CBMC Africa',date:'—',status:'Draft'}
+      ];
+      const cols = '2.4fr 1fr 1fr 0.9fr 0.7fr';
+      const rows = res.filter(x => match(x.title)).map(x => ({
+        rowStyle:rowStyle(cols), onEdit:()=>{},
+        cells:[ cell(x.title), dim(x.author), dim(x.date), badgeCell(x.status) ]
+      }));
+      tableView = { heading:'Resources', count:rows.length, cols:['File','Owner','Updated','Status',''], rows, empty:rows.length===0, addLabel:'↑ Upload', onAdd:()=>{}, headStyle:headStyle(cols) };
+    }
+
+    const mediaTiles = [
+      {name:'mm-perseverance.webp', src:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-062926-1hoGDN.webp'},
+      {name:'mm-conviction.webp', src:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-060826-VZEVE2.webp'},
+      {name:'mm-joy-work.webp', src:'https://cbmcafrica.org/wp-content/uploads/2026/06/mm-061526-BkjsF1.webp'},
+      {name:'peace-is-precious.png', src:'https://cbmcafrica.org/wp-content/uploads/2026/03/peace-is-precious-fNPOYG.png'},
+      {name:'article-blk-white.png', src:'https://cbmcafrica.org/wp-content/uploads/2026/05/article-blk-and-white-6mKy0b.png'},
+      {name:'video-newsletter.webp', src:'https://cbmcafrica.org/wp-content/uploads/2026/06/img_1644-fzMJOl.webp'},
+      {name:'q1-newsletter.png', src:'https://cbmcafrica.org/wp-content/uploads/2026/04/image-4-6-26-at-12.45-pm-scaled-O2h7yO.png'},
+      {name:'home-hero.jpeg', src:'https://cbmcafrica.org/wp-content/uploads/layerslider/Home/dJJxbATA.jpeg'}
+    ];
+    const settingsFields = [
+      { label:'ORGANIZATION NAME', value:'CBMC Africa' },
+      { label:'PUBLIC EMAIL', value:'info@cbmcafrica.com' },
+      { label:'PHONE', value:'+260 211 284102' },
+      { label:'ADDRESS', value:'Joseph Kabwe Road, No 32, PHI, Lusaka, Zambia' }
+    ];
+
+    const tableKeys = ['manna','news','events','subs','pages','resources'];
+
+    return {
+      isAdmin: p==='admin',
+      isSite: p!=='admin',
+      isHome: p==='home', isAbout: p==='about', isManna: p==='manna',
+      isDetail: p==='detail', isEvents: p==='events', isDonate: p==='donate',
+      wide: st.w > 860, narrow: st.w <= 860, menuOpen: st.menuOpen,
+      subscribed: st.subscribed, notSubscribed: !st.subscribed,
+      nav, adminNav, stats, dashPosts, messages, dashMessages: messages.slice(0,3), quickActions,
+      devos, latest: devos.slice(0,3), news, article, shareLinks, shareCopied: st.shareCopied,
+      events, eventFilters, eventsEmpty: events.length===0,
+      eventModalOpen: st.eventIdx!=null, eventModal, eventRegistered: st.eventRegistered,
+      eventDetail: !st.eventRegistered,
+      // admin sections
+      adminHead: adminMeta[st.adminSel] || adminMeta.dash,
+      adminSearch: st.adminSearch,
+      adminIsDash: st.adminSel==='dash',
+      adminIsTable: tableKeys.indexOf(st.adminSel)>=0,
+      adminIsMsgs: st.adminSel==='msgs',
+      adminIsMedia: st.adminSel==='media',
+      adminIsSettings: st.adminSel==='settings',
+      tableView, mediaTiles: withBg(mediaTiles), settingsFields,
+      mannaEmailBg: st.mannaEmail ? '#2f7d46' : '#c9c1b0',
+      mannaEmailKnob: st.mannaEmail ? '23px' : '3px',
+      toggleMannaEmail:()=>this.setState(s=>({mannaEmail:!s.mannaEmail})),
+      // compose modal
+      composeOpen: st.composeOpen, compose: st.compose,
+      composeForm: st.composeStep==='form', composeDone: st.composeStep==='done',
+      openCompose:()=>this.setState({composeOpen:true, composeStep:'form', compose:{title:'',author:'',body:''}}),
+      closeCompose:()=>this.setState({composeOpen:false}),
+      onComposeTitle:(e)=>{ const v=e.target.value; this.setState(s=>({compose:{...s.compose,title:v}})); },
+      onComposeAuthor:(e)=>{ const v=e.target.value; this.setState(s=>({compose:{...s.compose,author:v}})); },
+      onComposeBody:(e)=>{ const v=e.target.value; this.setState(s=>({compose:{...s.compose,body:v}})); },
+      submitCompose:(e)=>this.submitCompose(e),
+      // donate
+      donateDone: st.donateDone, donateForm: !st.donateDone,
+      amounts, showCustom: st.donateAmount==='Other', donateCustom: st.donateCustom,
+      onCustom:(e)=>{ const v=e.target.value; this.setState({donateCustom:v, donateError:false}); },
+      onceStyle:this.freqStyle(st.donateFreq==='once'), monthlyStyle:this.freqStyle(st.donateFreq==='monthly'),
+      setOnce:()=>this.setState({donateFreq:'once'}), setMonthly:()=>this.setState({donateFreq:'monthly'}),
+      checkout:()=>this.checkout(), donateError: st.donateError,
+      checkoutLabel: st.donateFreq==='monthly' ? 'Give '+(donateFinal||'—')+' monthly →' : 'Continue to secure checkout →',
+      donateSummary: st.donateFreq==='monthly' ? 'monthly' : 'one-time',
+      donateFinalAmount: donateFinal || '$100',
+      resetDonate:()=>this.setState({donateDone:false, donateAmount:'$100', donateCustom:'', donateFreq:'once'}),
+      // events modal handlers
+      closeEvent:()=>this.setState({eventIdx:null}),
+      registerEvent:()=>this.setState({eventRegistered:true}),
+      stop:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); },
+      // admin search
+      onSearch:(e)=>{ const v=e.target.value; this.setState({adminSearch:v}); },
+      preventSubmit:(e)=>{ if(e&&e.preventDefault) e.preventDefault(); },
+      noop:()=>{},
+      goAdminManna:()=>this.setState({adminSel:'manna'}),
+      goAdminMsgs:()=>this.setState({adminSel:'msgs'}),
+      practices: [
+        { num:'01', title:'CALLING', text:'Called by God to be His “ambassadors” as well as “salt” and “light” in the marketplace.' },
+        { num:'02', title:'PRAYER', text:'By developing intimacy with Christ, we seek His favor and power in reaching the lost.' },
+        { num:'03', title:'TEAMS', text:'Effective teams of business and professional men and women who support one another.' },
+        { num:'04', title:'EVANGELISM', text:'Compelled by the love of God to bring reconciliation to humanity through the Gospel.' },
+        { num:'05', title:'DISCIPLESHIP', text:'In humility and love we help each other become authentic Christ-followers.' },
+        { num:'06', title:'LEADERSHIP', text:'Servant leadership, as modeled by Jesus Christ, guides how we conduct ourselves.' }
+      ],
+      initiatives: [
+        { icon:'🙏', tag:'INITIATIVE ONE', title:'Prayer', text:'Prayer is our first priority — the key to our vital life in Christ. We pray with and for one another so lives come to know the Lord.' },
+        { icon:'🌱', tag:'INITIATIVE TWO', title:'Growing the Ministry', text:'We long to see every country in Africa have a CBMC presence — laborers in the marketplace taking Jesus to people right where they are.' },
+        { icon:'🤝', tag:'INITIATIVE THREE', title:'Fellowship (C3)', text:'Connect3 teams give business people a place to connect to God and one another, meeting weekly in cities across the continent.' }
+      ],
+      regions: ['Central Africa','East Africa','North Africa','South Africa','West Africa'],
+      goHome:()=>this.go('home'), goAbout:()=>this.go('about'), goManna:()=>this.go('manna'),
+      goEvents:()=>this.go('events'), goDonate:()=>this.go('donate'), goAdmin:()=>this.go('admin'),
+      exitAdmin:()=>this.go('home'),
+      toggleMenu:()=>this.setState(s=>({menuOpen:!s.menuOpen})),
+      subscribe:(e)=>{ if(e&&e.preventDefault)e.preventDefault(); this.setState({subscribed:true}); },
+      resetSub:()=>this.setState({subscribed:false})
+    };
+  }
+}
+</script>
+</body>
+</html>

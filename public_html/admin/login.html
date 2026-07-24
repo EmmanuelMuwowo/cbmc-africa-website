@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff Login — CBMC Africa</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="login-shell">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark">C<span>.</span></span>
+      <span>
+        <span class="brand-name" style="display:block;">CBMC Africa</span>
+        <span style="display:block;font-size:10.5px;letter-spacing:2px;color:#86868b;font-weight:600;">ADMIN LOGIN</span>
+      </span>
+    </div>
+    <form id="loginForm">
+      <div class="form-row" style="margin-top:0;">
+        <label class="field-label">EMAIL</label>
+        <input class="field-input" required type="email" id="loginEmail" placeholder="admin@cbmcafrica.com">
+      </div>
+      <div class="form-row">
+        <label class="field-label">PASSWORD</label>
+        <input class="field-input" required type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-navy" style="width:100%;margin-top:20px;">Sign in</button>
+      <p class="form-error" id="loginError" style="display:none;"></p>
+    </form>
+    <p style="text-align:center;margin-top:20px;"><a href="../index.html" style="font-size:13px;color:var(--text-mute-2);">← Back to public site</a></p>
+  </div>
+</div>
+<script src="../js/api.js"></script>
+<script>
+(function () {
+  const form = document.getElementById('loginForm');
+  const errorEl = document.getElementById('loginError');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.style.display = 'none';
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    try {
+      await Api.post('/api/admin/login.php', { email, password });
+      window.location.href = 'index.html';
+    } catch (err) {
+      errorEl.textContent = err.message || 'Invalid email or password.';
+      errorEl.style.display = 'block';
+    }
+  });
+})();
+</script>
+</body>
+</html>
