@@ -13,6 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($body['title'] ?? '');
     $author = trim($body['author'] ?? '');
     $bodyText = trim($body['body'] ?? '');
+    $status = valid_status($body['status'] ?? null);
+    $date = trim($body['date'] ?? '');
 
     if ($title === '' || $author === '') {
         json_error('Title and author are required.');
@@ -20,14 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $slug = slugify($title);
     $blocks = $bodyText !== '' ? [['t' => 'p', 'x' => mb_substr($bodyText, 0, 8000)]] : [];
+    $dateValue = $date !== '' ? $date : date('Y-m-d');
 
     $stmt = db()->prepare(
         'INSERT INTO devotionals (slug, title, author, author_initials, devotional_date, excerpt, blocks, reflection, status)
-         VALUES (?, ?, ?, ?, CURDATE(), ?, ?, JSON_ARRAY(), \'Draft\')'
+         VALUES (?, ?, ?, ?, ?, ?, ?, JSON_ARRAY(), ?)'
     );
     $stmt->execute([
         $slug, mb_substr($title, 0, 300), mb_substr($author, 0, 200), initials($author),
-        mb_substr($bodyText, 0, 240), json_encode($blocks)
+        $dateValue, mb_substr($bodyText, 0, 240), json_encode($blocks), $status
     ]);
 
     $id = (int)db()->lastInsertId();

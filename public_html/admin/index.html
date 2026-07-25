@@ -60,6 +60,17 @@
   </div>
 </div>
 
+<!-- Add / edit Event modal -->
+<div class="modal-overlay" id="eventComposeModal">
+  <div class="modal-box" style="max-width:560px;">
+    <div style="display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border-cream-2);">
+      <div class="serif" style="font-size:19px;font-weight:600;" id="eventComposeTitle">New Event</div>
+      <button class="modal-close" id="eventComposeClose" style="position:static;color:#86868b;margin-left:auto;">×</button>
+    </div>
+    <div id="eventComposeBody" style="padding:22px 24px;overflow:auto;max-height:75vh;"></div>
+  </div>
+</div>
+
 <script src="../js/api.js"></script>
 <script src="../js/util.js"></script>
 <script src="js/admin.js"></script>

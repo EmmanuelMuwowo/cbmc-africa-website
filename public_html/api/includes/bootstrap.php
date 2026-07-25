@@ -57,6 +57,10 @@ function short_date_label(?string $date): string {
     return date('M j, Y', $ts);
 }
 
+function valid_status(?string $status): string {
+    return in_array($status, ['Published', 'Scheduled', 'Draft'], true) ? $status : 'Draft';
+}
+
 function slugify(string $title): string {
     $base = strtolower(trim($title));
     $base = preg_replace('/[^a-z0-9]+/', '-', $base);
