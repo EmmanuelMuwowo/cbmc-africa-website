@@ -97,4 +97,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     json_response(serialize_resource($row->fetch()), 201);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) json_error('Missing id.');
+
+    $row = db()->prepare('SELECT file_path FROM resources WHERE id = ?');
+    $row->execute([$id]);
+    $found = $row->fetch();
+    if (!$found) json_error('Not found.', 404);
+
+    $stmt = db()->prepare('DELETE FROM resources WHERE id = ?');
+    $stmt->execute([$id]);
+
+    if (!empty($found['file_path'])) {
+        $diskPath = __DIR__ . '/../../' . ltrim($found['file_path'], '/');
+        if (is_file($diskPath)) @unlink($diskPath);
+    }
+
+    json_response(['ok' => true]);
+}
+
 json_error('Method not allowed.', 405);

@@ -7,7 +7,7 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) json_error('Missing id.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    $stmt = db()->prepare('DELETE FROM devotionals WHERE id = ?');
+    $stmt = db()->prepare('DELETE FROM news WHERE id = ?');
     $stmt->execute([$id]);
     if ($stmt->rowCount() === 0) json_error('Not found.', 404);
     json_response(['ok' => true]);
@@ -26,12 +26,12 @@ if ($title === '' || $author === '') {
     json_error('Title and author are required.');
 }
 
-$blocks = $bodyText !== '' ? [['t' => 'p', 'x' => mb_substr($bodyText, 0, 8000)]] : [];
+$blocks = $bodyText !== '' ? [mb_substr($bodyText, 0, 8000)] : [];
 
-$sql = 'UPDATE devotionals SET title = ?, author = ?, author_initials = ?, excerpt = ?, blocks = ?, status = ?';
-$params = [mb_substr($title, 0, 300), mb_substr($author, 0, 200), initials($author), mb_substr($bodyText, 0, 240), json_encode($blocks), $status];
+$sql = 'UPDATE news SET title = ?, author = ?, excerpt = ?, blocks = ?, status = ?';
+$params = [mb_substr($title, 0, 300), mb_substr($author, 0, 200), mb_substr($bodyText, 0, 240), json_encode($blocks), $status];
 if ($date !== '') {
-    $sql .= ', devotional_date = ?';
+    $sql .= ', published_date = ?';
     $params[] = $date;
 }
 $sql .= ' WHERE id = ?';
@@ -40,8 +40,8 @@ $params[] = $id;
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 
-$row = db()->prepare('SELECT * FROM devotionals WHERE id = ?');
+$row = db()->prepare('SELECT * FROM news WHERE id = ?');
 $row->execute([$id]);
 $found = $row->fetch();
 if (!$found) json_error('Not found.', 404);
-json_response(serialize_devotional($found));
+json_response(serialize_news($found));

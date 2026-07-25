@@ -40,7 +40,7 @@
     search: '',
     pendingMsgCount: 0,
     cache: {},
-    compose: { mode: null, id: null }
+    compose: { mode: null, id: null, type: 'manna' }
   };
 
   const els = {
@@ -59,7 +59,11 @@
     resourceModal: document.getElementById('resourceModal'),
     resourceModalClose: document.getElementById('resourceModalClose'),
     resourceModalTitle: document.getElementById('resourceModalTitle'),
-    resourceModalBody: document.getElementById('resourceModalBody')
+    resourceModalBody: document.getElementById('resourceModalBody'),
+    eventComposeModal: document.getElementById('eventComposeModal'),
+    eventComposeClose: document.getElementById('eventComposeClose'),
+    eventComposeTitle: document.getElementById('eventComposeTitle'),
+    eventComposeBody: document.getElementById('eventComposeBody')
   };
 
   function badgePill(status) {
@@ -88,11 +92,13 @@
       state.search = els.searchInput.value;
       renderCurrentSection();
     });
-    els.newMannaBtn.addEventListener('click', () => openCompose('create'));
+    els.newMannaBtn.addEventListener('click', () => openCompose('create', null, 'manna'));
     els.composeClose.addEventListener('click', closeCompose);
     els.composeModal.addEventListener('click', (e) => { if (e.target === els.composeModal) closeCompose(); });
     els.resourceModalClose.addEventListener('click', closeResourceModal);
     els.resourceModal.addEventListener('click', (e) => { if (e.target === els.resourceModal) closeResourceModal(); });
+    els.eventComposeClose.addEventListener('click', closeEventModal);
+    els.eventComposeModal.addEventListener('click', (e) => { if (e.target === els.eventComposeModal) closeEventModal(); });
   }
 
   async function refreshMsgBadge() {
@@ -169,6 +175,11 @@
     return fields.some((f) => String(f || '').toLowerCase().includes(needle));
   }
 
+  async function reloadCurrentTable() {
+    state.cache[state.section] = await fetchSectionData(state.section);
+    renderCurrentSection();
+  }
+
   // ---------- Dashboard ----------
   function renderDash(data) {
     els.content.innerHTML = `
@@ -198,7 +209,6 @@
         <div style="display:flex;flex-direction:column;gap:20px;">
           <div class="panel" style="padding:18px 20px;">
             <div class="panel-head-title" style="margin-bottom:14px;">Recent contact messages</div>
-            ${data.dashMessages.map(() => '').join('')}
             <div id="dashMsgList"></div>
           </div>
           <div class="quick-actions-panel">
@@ -233,18 +243,22 @@
     manna: {
       heading: 'All Monday Manna', addLabel: '+ New Manna',
       cols: ['Title', 'Author', 'Published', 'Status', ''],
-      colsCss: '2.4fr 1fr 1fr 0.9fr 0.7fr',
+      colsCss: '2fr 1fr 1fr 0.9fr 1.1fr',
       filter: (q, r) => match(q, r.title, r.author),
       cells: (r) => [r.title, r.author, r.dateLabel, badgePill(r.status)],
-      onAdd: () => openCompose('create'),
-      onEdit: (r) => openCompose('edit', r)
+      onAdd: () => openCompose('create', null, 'manna'),
+      onEdit: (r) => openCompose('edit', r, 'manna'),
+      onDelete: (r) => deleteItem(`/api/admin/devotional.php?id=${r.id}`, r.title)
     },
     news: {
       heading: 'News & Articles', addLabel: '+ New Article',
       cols: ['Headline', 'Author', 'Updated', 'Status', ''],
-      colsCss: '2.4fr 1fr 1fr 0.9fr 0.7fr',
+      colsCss: '2fr 1fr 1fr 0.9fr 1.1fr',
       filter: (q, r) => match(q, r.title, r.author),
-      cells: (r) => [r.title, r.author, r.dateLabel, badgePill(r.status)]
+      cells: (r) => [r.title, r.author, r.dateLabel, badgePill(r.status)],
+      onAdd: () => openCompose('create', null, 'news'),
+      onEdit: (r) => openCompose('edit', r, 'news'),
+      onDelete: (r) => deleteItem(`/api/admin/news-item.php?id=${r.id}`, r.title)
     },
     pages: {
       heading: 'Content Pages', addLabel: '+ New Page',
@@ -256,28 +270,46 @@
     events: {
       heading: 'Upcoming Events', addLabel: '+ Add Event',
       cols: ['Title', 'Location', 'Dates', 'Region', ''],
-      colsCss: '2.2fr 1.3fr 1fr 0.9fr 0.7fr',
+      colsCss: '2fr 1.2fr 1fr 0.9fr 1.1fr',
       filter: (q, r) => match(q, r.title, r.location),
-      cells: (r) => [r.title, r.location, r.datesLabel, regionPill(r.category)]
+      cells: (r) => [r.title, r.location, r.datesLabel, regionPill(r.category)],
+      onAdd: () => openEventModal('create'),
+      onEdit: (r) => openEventModal('edit', r),
+      onDelete: (r) => deleteItem(`/api/admin/event.php?id=${r.id}`, r.title)
     },
     resources: {
       heading: 'Resources', addLabel: '↑ Upload',
       cols: ['Title', 'Category', 'Published', 'Status', ''],
-      colsCss: '2.2fr 1.2fr 1fr 0.9fr 0.7fr',
+      colsCss: '2fr 1.1fr 1fr 0.9fr 1.1fr',
       filter: (q, r) => match(q, r.title, r.category),
       cells: (r) => [r.title, r.category || '—', r.dateLabel, badgePill(r.status)],
       onAdd: () => openResourceModal('create'),
-      onEdit: (r) => openResourceModal('edit', r)
+      onEdit: (r) => openResourceModal('edit', r),
+      onDelete: (r) => deleteItem(`/api/admin/resources.php?id=${r.id}`, r.title)
     },
     subs: {
       heading: 'Subscribers', addLabel: '↓ Export CSV',
       cols: ['Name', 'Email', 'Region', 'Joined', ''],
-      colsCss: '1.4fr 2fr 1fr 1fr 0.7fr',
+      colsCss: '1.3fr 1.8fr 1fr 1fr 0.7fr',
       filter: (q, r) => match(q, r.name, r.email, r.region),
       cells: (r) => [r.name, r.email, r.region, r.date],
-      onAdd: () => { window.location.href = '/api/admin/subscribers-export.php'; }
+      onAdd: () => { window.location.href = '/api/admin/subscribers-export.php'; },
+      onDelete: (r) => deleteItem(`/api/admin/subscriber.php?id=${r.id}`, r.name, 'Remove')
     }
   };
+
+  async function deleteItem(url, label, verb) {
+    if (!confirm(`${verb || 'Delete'} "${label}"? This can't be undone.`)) return;
+    try {
+      const res = await fetch(url, { method: 'DELETE', credentials: 'same-origin' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not delete this item.');
+      await reloadCurrentTable();
+      await refreshMsgBadge();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
 
   function renderTable(key, rows) {
     const cfg = TABLE_CONFIG[key];
@@ -300,17 +332,21 @@
       const cells = cfg.cells(r);
       return `<div class="data-row" style="grid-template-columns:${cfg.colsCss};" data-idx="${i}">
         ${cells.map((c, ci) => `<div${ci === 0 ? ' style="font-weight:600;color:var(--text-dark);"' : ' style="color:var(--text-muted);"'}>${typeof c === 'string' && c.startsWith('<span') ? c : Util.escapeHtml(c)}</div>`).join('')}
-        <button class="edit-btn" data-idx="${i}">Edit</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          ${cfg.onEdit ? `<button class="edit-btn" data-act="edit" data-idx="${i}">Edit</button>` : ''}
+          ${cfg.onDelete ? `<button class="edit-btn" data-act="delete" data-idx="${i}" style="background:#fdecea;color:#c0362c;">Delete</button>` : ''}
+        </div>
       </div>`;
     }).join('');
     document.getElementById('tableRows').innerHTML = rowsHtml;
 
     if (cfg.onAdd) document.getElementById('tableAddBtn').addEventListener('click', cfg.onAdd);
-    if (cfg.onEdit) {
-      document.getElementById('tableRows').querySelectorAll('.edit-btn').forEach((btn) => {
-        btn.addEventListener('click', () => cfg.onEdit(filtered[Number(btn.dataset.idx)]));
-      });
-    }
+    document.getElementById('tableRows').querySelectorAll('[data-act="edit"]').forEach((btn) => {
+      btn.addEventListener('click', () => cfg.onEdit(filtered[Number(btn.dataset.idx)]));
+    });
+    document.getElementById('tableRows').querySelectorAll('[data-act="delete"]').forEach((btn) => {
+      btn.addEventListener('click', () => cfg.onDelete(filtered[Number(btn.dataset.idx)]));
+    });
   }
 
   // ---------- Messages ----------
@@ -318,19 +354,39 @@
     els.content.innerHTML = `
       <div class="panel">
         <div style="padding:15px 20px;border-bottom:1px solid var(--border-cream-2);font-size:16px;font-weight:600;">Inbox — ${rows.length} messages</div>
-        ${rows.map((m) => `<div class="inbox-row">
-          <div class="inbox-avatar">${Util.escapeHtml(m.initials)}</div>
-          <div style="min-width:0;flex:1;">
-            <div style="display:flex;gap:10px;align-items:center;"><span style="font-weight:600;font-size:14.5px;">${Util.escapeHtml(m.name)}</span><span style="font-size:12px;color:var(--text-mute-4);">${Util.escapeHtml(m.email)}</span></div>
-            <div style="font-size:14px;color:var(--text-body);margin-top:5px;line-height:1.5;">${Util.escapeHtml(m.preview)}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
-            <span style="font-size:11.5px;color:var(--text-mute-4);">${Util.escapeHtml(m.time)}</span>
-            <button class="reply-btn">${m.replied ? 'Replied' : 'Reply'}</button>
-          </div>
-        </div>`).join('')}
+        <div id="inboxRows"></div>
       </div>
     `;
+    renderInboxRows(rows);
+  }
+
+  function renderInboxRows(rows) {
+    document.getElementById('inboxRows').innerHTML = rows.map((m) => `
+      <div class="inbox-row">
+        <div class="inbox-avatar">${Util.escapeHtml(m.initials)}</div>
+        <div style="min-width:0;flex:1;">
+          <div style="display:flex;gap:10px;align-items:center;"><span style="font-weight:600;font-size:14.5px;">${Util.escapeHtml(m.name)}</span><span style="font-size:12px;color:var(--text-mute-4);">${Util.escapeHtml(m.email)}</span></div>
+          <div style="font-size:14px;color:var(--text-body);margin-top:5px;line-height:1.5;">${Util.escapeHtml(m.preview)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+          <span style="font-size:11.5px;color:var(--text-mute-4);">${Util.escapeHtml(m.time)}</span>
+          <button class="reply-btn" data-id="${m.id}" ${m.replied ? 'disabled' : ''}>${m.replied ? 'Replied ✓' : 'Mark replied'}</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('inboxRows').querySelectorAll('.reply-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          await Api.patch(`/api/admin/message.php?id=${btn.dataset.id}`);
+          btn.textContent = 'Replied ✓';
+          await refreshMsgBadge();
+        } catch (err) {
+          btn.disabled = false;
+          alert(err.message || 'Could not update this message.');
+        }
+      });
+    });
   }
 
   // ---------- Media ----------
@@ -373,9 +429,26 @@
     document.getElementById('mediaGrid').innerHTML = tiles.map((t) => `
       <div class="media-tile">
         <div class="media-thumb" style="background-image:url('${Util.escapeHtml(t.src)}')"></div>
-        <div class="media-name">${Util.escapeHtml(t.name)}</div>
+        <div class="media-name" style="display:flex;align-items:center;gap:6px;">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${Util.escapeHtml(t.name)}</span>
+          ${t.id ? `<button data-id="${t.id}" class="media-delete-btn" style="color:#c0362c;font-weight:700;flex-shrink:0;">✕</button>` : ''}
+        </div>
       </div>
     `).join('');
+    document.querySelectorAll('.media-delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this file from the media library?')) return;
+        try {
+          const res = await fetch(`/api/admin/media.php?id=${btn.dataset.id}`, { method: 'DELETE', credentials: 'same-origin' });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'Could not delete this file.');
+          state.cache.media = state.cache.media.filter((t) => String(t.id) !== btn.dataset.id);
+          renderMediaGrid(state.cache.media);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
   }
 
   // ---------- Settings ----------
@@ -427,18 +500,34 @@
     });
   }
 
-  // ---------- Compose modal (Monday Manna create/edit) ----------
-  function openCompose(mode, row) {
-    state.compose = { mode, id: row ? row.id : null };
-    els.composeTitle.textContent = mode === 'edit' ? 'Edit Monday Manna' : 'New Monday Manna';
+  // ---------- Compose modal (Monday Manna / News create+edit) ----------
+  const COMPOSE_LABELS = {
+    manna: { noun: 'Monday Manna', bodyLabel: 'DEVOTIONAL BODY', placeholder: 'Write the meditation…', section: 'manna' },
+    news: { noun: 'News Article', bodyLabel: 'ARTICLE BODY', placeholder: 'Write the article…', section: 'news' }
+  };
+
+  function openCompose(mode, row, type) {
+    state.compose = { mode, id: row ? row.id : null, type };
+    const labels = COMPOSE_LABELS[type];
+    els.composeTitle.textContent = `${mode === 'edit' ? 'Edit' : 'New'} ${labels.noun}`;
     els.composeBody.innerHTML = `
       <form id="composeForm" style="display:flex;flex-direction:column;gap:16px;">
         <div><label class="field-label">TITLE</label><input class="field-input" required id="composeFieldTitle" placeholder="e.g. When Excellence Becomes Worship"></div>
         <div><label class="field-label">AUTHOR</label><input class="field-input" required id="composeFieldAuthor" placeholder="e.g. Robert J. Tamasy"></div>
-        <div><label class="field-label">DEVOTIONAL BODY</label><textarea class="field-input" id="composeFieldBody" placeholder="Write the meditation…"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">DATE</label><input class="field-input" type="date" id="composeFieldDate"></div>
+          <div style="flex:1;"><label class="field-label">STATUS</label>
+            <select class="field-input" id="composeFieldStatus">
+              <option value="Draft">Draft</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="Published">Published</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="field-label">${labels.bodyLabel}</label><textarea class="field-input" id="composeFieldBody" placeholder="${labels.placeholder}"></textarea></div>
         <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
           <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="composeCancel">Cancel</button>
-          <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save draft'}</button>
+          <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save'}</button>
         </div>
         <p class="form-error" id="composeError" style="display:none;"></p>
       </form>
@@ -446,7 +535,12 @@
     if (mode === 'edit' && row) {
       document.getElementById('composeFieldTitle').value = row.title;
       document.getElementById('composeFieldAuthor').value = row.author;
-      document.getElementById('composeFieldBody').value = (row.blocks && row.blocks[0] && row.blocks[0].x) || '';
+      document.getElementById('composeFieldDate').value = row.date || '';
+      document.getElementById('composeFieldStatus').value = row.status || 'Draft';
+      const firstBlock = row.blocks && row.blocks[0];
+      document.getElementById('composeFieldBody').value = (typeof firstBlock === 'string' ? firstBlock : firstBlock && firstBlock.x) || '';
+    } else {
+      document.getElementById('composeFieldDate').value = new Date().toISOString().slice(0, 10);
     }
     document.getElementById('composeCancel').addEventListener('click', closeCompose);
     document.getElementById('composeForm').addEventListener('submit', submitCompose);
@@ -464,29 +558,34 @@
     const payload = {
       title: document.getElementById('composeFieldTitle').value.trim(),
       author: document.getElementById('composeFieldAuthor').value.trim(),
+      date: document.getElementById('composeFieldDate').value,
+      status: document.getElementById('composeFieldStatus').value,
       body: document.getElementById('composeFieldBody').value.trim()
     };
+    const { type, mode, id } = state.compose;
+    const basePath = type === 'manna' ? 'devotional' : 'news-item';
+    const collectionPath = type === 'manna' ? 'devotionals' : 'news';
     try {
-      if (state.compose.mode === 'edit') {
-        await Api.put(`/api/admin/devotional.php?id=${state.compose.id}`, payload);
+      if (mode === 'edit') {
+        await Api.put(`/api/admin/${basePath}.php?id=${id}`, payload);
       } else {
-        await Api.post('/api/admin/devotionals.php', payload);
+        await Api.post(`/api/admin/${collectionPath}.php`, payload);
       }
       els.composeBody.innerHTML = `
         <div style="padding:16px 4px;text-align:center;">
           <div class="success-icon">✓</div>
-          <div class="success-title" style="margin-top:16px;">${state.compose.mode === 'edit' ? 'Changes saved' : 'Draft saved'}</div>
-          <p class="success-text">"${Util.escapeHtml(payload.title)}" ${state.compose.mode === 'edit' ? 'was updated.' : 'was added to your Monday Manna list.'}</p>
+          <div class="success-title" style="margin-top:16px;">${mode === 'edit' ? 'Changes saved' : 'Saved'}</div>
+          <p class="success-text">"${Util.escapeHtml(payload.title)}" ${mode === 'edit' ? 'was updated.' : 'was added.'}</p>
           <button class="btn btn-navy" id="composeDoneBtn" style="margin-top:18px;">Done</button>
         </div>
       `;
       document.getElementById('composeDoneBtn').addEventListener('click', async () => {
         closeCompose();
-        if (state.section === 'manna') await loadSection('manna');
+        if (state.section === COMPOSE_LABELS[type].section) await reloadCurrentTable();
         await refreshMsgBadge();
       });
     } catch (err) {
-      errorEl.textContent = err.message || 'Could not save this devotional.';
+      errorEl.textContent = err.message || 'Could not save this item.';
       errorEl.style.display = 'block';
     }
   }
@@ -603,10 +702,114 @@
       `;
       document.getElementById('resourceDoneBtn').addEventListener('click', async () => {
         closeResourceModal();
-        if (state.section === 'resources') await loadSection('resources');
+        if (state.section === 'resources') await reloadCurrentTable();
       });
     } catch (err) {
       errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // ---------- Event create/edit modal ----------
+  let eventComposeState = { mode: null, id: null };
+
+  function openEventModal(mode, row) {
+    eventComposeState = { mode, id: row ? row.id : null };
+    els.eventComposeTitle.textContent = mode === 'edit' ? 'Edit Event' : 'New Event';
+    els.eventComposeBody.innerHTML = `
+      <form id="eventForm" style="display:flex;flex-direction:column;gap:16px;">
+        <div><label class="field-label">TITLE</label><input class="field-input" required id="evFieldTitle" placeholder="e.g. Regional Leadership Summit"></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">LOCATION</label><input class="field-input" required id="evFieldLocation" placeholder="e.g. Lusaka, Zambia"></div>
+          <div style="flex:1;"><label class="field-label">REGION</label>
+            <select class="field-input" id="evFieldCategory">
+              <option value="AFRICA">Africa</option>
+              <option value="INTERNATIONAL">International</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">START DATE</label><input class="field-input" required type="date" id="evFieldDate"></div>
+          <div style="flex:1;"><label class="field-label">DATES LABEL</label><input class="field-input" id="evFieldDatesLabel" placeholder="e.g. Sep 18–20, 2026"></div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">TIME</label><input class="field-input" id="evFieldTime" placeholder="e.g. 8:30 AM – 5:00 PM"></div>
+          <div style="flex:1;"><label class="field-label">FORMAT</label><input class="field-input" id="evFieldFormat" placeholder="e.g. In person"></div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">COST</label><input class="field-input" id="evFieldCost" placeholder="e.g. $120 or Free"></div>
+          <div style="flex:1;"><label class="field-label">HOST</label><input class="field-input" id="evFieldHost" placeholder="e.g. CBMC Zambia"></div>
+        </div>
+        <div><label class="field-label">DESCRIPTION</label><textarea class="field-input" id="evFieldDescription" placeholder="What should attendees expect?"></textarea></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
+          <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="eventCancel">Cancel</button>
+          <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save event'}</button>
+        </div>
+        <p class="form-error" id="eventError" style="display:none;"></p>
+      </form>
+    `;
+
+    if (mode === 'edit' && row) {
+      document.getElementById('evFieldTitle').value = row.title;
+      document.getElementById('evFieldLocation').value = row.location;
+      document.getElementById('evFieldCategory').value = row.category;
+      document.getElementById('evFieldDate').value = row.date || '';
+      document.getElementById('evFieldDatesLabel').value = row.datesLabel || '';
+      document.getElementById('evFieldTime').value = row.time || '';
+      document.getElementById('evFieldFormat').value = row.format || '';
+      document.getElementById('evFieldCost').value = row.cost || '';
+      document.getElementById('evFieldHost').value = row.host || '';
+      document.getElementById('evFieldDescription').value = row.description || '';
+    }
+
+    document.getElementById('eventCancel').addEventListener('click', closeEventModal);
+    document.getElementById('eventForm').addEventListener('submit', submitEventForm);
+    els.eventComposeModal.classList.add('open');
+  }
+
+  function closeEventModal() {
+    els.eventComposeModal.classList.remove('open');
+  }
+
+  async function submitEventForm(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById('eventError');
+    errorEl.style.display = 'none';
+
+    const title = document.getElementById('evFieldTitle').value.trim();
+    const payload = {
+      title,
+      location: document.getElementById('evFieldLocation').value.trim(),
+      category: document.getElementById('evFieldCategory').value,
+      date: document.getElementById('evFieldDate').value,
+      datesLabel: document.getElementById('evFieldDatesLabel').value.trim(),
+      time: document.getElementById('evFieldTime').value.trim(),
+      format: document.getElementById('evFieldFormat').value.trim(),
+      cost: document.getElementById('evFieldCost').value.trim(),
+      host: document.getElementById('evFieldHost').value.trim(),
+      description: document.getElementById('evFieldDescription').value.trim()
+    };
+
+    try {
+      if (eventComposeState.mode === 'edit') {
+        await Api.put(`/api/admin/event.php?id=${eventComposeState.id}`, payload);
+      } else {
+        await Api.post('/api/admin/events.php', payload);
+      }
+      els.eventComposeBody.innerHTML = `
+        <div style="padding:16px 4px;text-align:center;">
+          <div class="success-icon">✓</div>
+          <div class="success-title" style="margin-top:16px;">${eventComposeState.mode === 'edit' ? 'Changes saved' : 'Event saved'}</div>
+          <p class="success-text">"${Util.escapeHtml(title)}" ${eventComposeState.mode === 'edit' ? 'was updated.' : 'was added to your Events list.'}</p>
+          <button class="btn btn-navy" id="eventDoneBtn" style="margin-top:18px;">Done</button>
+        </div>
+      `;
+      document.getElementById('eventDoneBtn').addEventListener('click', async () => {
+        closeEventModal();
+        if (state.section === 'events') await reloadCurrentTable();
+      });
+    } catch (err) {
+      errorEl.textContent = err.message || 'Could not save this event.';
       errorEl.style.display = 'block';
     }
   }

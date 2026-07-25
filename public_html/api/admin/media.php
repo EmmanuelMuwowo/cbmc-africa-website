@@ -4,7 +4,27 @@ require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $rows = db()->query('SELECT * FROM media ORDER BY uploaded_at DESC')->fetchAll();
-    json_response(array_map(fn($m) => ['name' => $m['filename'], 'src' => $m['url']], $rows));
+    json_response(array_map(fn($m) => ['id' => (int)$m['id'], 'name' => $m['filename'], 'src' => $m['url']], $rows));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) json_error('Missing id.');
+
+    $row = db()->prepare('SELECT url FROM media WHERE id = ?');
+    $row->execute([$id]);
+    $found = $row->fetch();
+    if (!$found) json_error('Not found.', 404);
+
+    $stmt = db()->prepare('DELETE FROM media WHERE id = ?');
+    $stmt->execute([$id]);
+
+    if (str_starts_with($found['url'], '/uploads/')) {
+        $diskPath = __DIR__ . '/../../' . ltrim($found['url'], '/');
+        if (is_file($diskPath)) @unlink($diskPath);
+    }
+
+    json_response(['ok' => true]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -41,8 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $url = '/uploads/' . $filename;
     $stmt = db()->prepare('INSERT INTO media (filename, url) VALUES (?, ?)');
     $stmt->execute([$file['name'], $url]);
+    $newId = (int)db()->lastInsertId();
 
-    json_response(['name' => $file['name'], 'src' => $url], 201);
+    json_response(['id' => $newId, 'name' => $file['name'], 'src' => $url], 201);
 }
 
 json_error('Method not allowed.', 405);
