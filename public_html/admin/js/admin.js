@@ -2,6 +2,7 @@
   const NAV = [
     { key: 'dash', label: 'Dashboard' },
     { key: 'pages', label: 'Content Pages' },
+    { key: 'leaders', label: 'Leadership Team' },
     { key: 'manna', label: 'Monday Manna' },
     { key: 'news', label: 'News & Articles' },
     { key: 'events', label: 'Events' },
@@ -15,6 +16,7 @@
   const META = {
     dash: { title: 'Dashboard', subtitle: "Welcome back — here's what's happening across CBMC Africa." },
     pages: { title: 'Content Pages', subtitle: 'Manage the static pages of the public site.' },
+    leaders: { title: 'Leadership Team', subtitle: 'Photos, bios and contact details shown on the public Leadership page.' },
     manna: { title: 'Monday Manna', subtitle: 'Create, schedule and publish weekly devotionals.' },
     news: { title: 'News & Articles', subtitle: 'Featured stories from across the movement.' },
     events: { title: 'Events', subtitle: 'Summits, forums, trainings and gatherings.' },
@@ -63,7 +65,11 @@
     eventComposeModal: document.getElementById('eventComposeModal'),
     eventComposeClose: document.getElementById('eventComposeClose'),
     eventComposeTitle: document.getElementById('eventComposeTitle'),
-    eventComposeBody: document.getElementById('eventComposeBody')
+    eventComposeBody: document.getElementById('eventComposeBody'),
+    leaderModal: document.getElementById('leaderModal'),
+    leaderModalClose: document.getElementById('leaderModalClose'),
+    leaderModalTitle: document.getElementById('leaderModalTitle'),
+    leaderModalBody: document.getElementById('leaderModalBody')
   };
 
   function badgePill(status) {
@@ -99,6 +105,8 @@
     els.resourceModal.addEventListener('click', (e) => { if (e.target === els.resourceModal) closeResourceModal(); });
     els.eventComposeClose.addEventListener('click', closeEventModal);
     els.eventComposeModal.addEventListener('click', (e) => { if (e.target === els.eventComposeModal) closeEventModal(); });
+    els.leaderModalClose.addEventListener('click', closeLeaderModal);
+    els.leaderModal.addEventListener('click', (e) => { if (e.target === els.leaderModal) closeLeaderModal(); });
   }
 
   async function refreshMsgBadge() {
@@ -149,6 +157,7 @@
       news: '/api/admin/news.php',
       events: '/api/admin/events.php',
       pages: '/api/admin/pages.php',
+      leaders: '/api/admin/leaders.php',
       resources: '/api/admin/resources.php',
       subs: '/api/admin/subscribers.php',
       msgs: '/api/admin/messages.php',
@@ -286,6 +295,19 @@
       onAdd: () => openResourceModal('create'),
       onEdit: (r) => openResourceModal('edit', r),
       onDelete: (r) => deleteItem(`/api/admin/resources.php?id=${r.id}`, r.title)
+    },
+    leaders: {
+      heading: 'Leadership Team', addLabel: '+ Add Leader',
+      cols: ['Name', 'Title', 'Region', 'Status', ''],
+      colsCss: '2fr 1.4fr 1.1fr 0.9fr 1.1fr',
+      filter: (q, r) => match(q, r.name, r.title, r.region),
+      cells: (r) => [
+        `<span style="display:flex;align-items:center;gap:10px;"><span style="width:28px;height:28px;border-radius:50%;flex-shrink:0;background:${r.photo ? `url('${Util.escapeHtml(r.photo)}') center/cover` : '#f0f0f2'};"></span>${Util.escapeHtml(r.name)}</span>`,
+        r.title || '—', r.region || '—', badgePill(r.status)
+      ],
+      onAdd: () => openLeaderModal('create'),
+      onEdit: (r) => openLeaderModal('edit', r),
+      onDelete: (r) => deleteItem(`/api/admin/leaders.php?id=${r.id}`, r.name)
     },
     subs: {
       heading: 'Subscribers', addLabel: '↓ Export CSV',
@@ -810,6 +832,119 @@
       });
     } catch (err) {
       errorEl.textContent = err.message || 'Could not save this event.';
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // ---------- Leadership Team create/edit modal ----------
+  let leaderState = { mode: null, id: null };
+
+  const LEADER_REGIONS = ['Continental / Global', 'Central Africa', 'East Africa', 'North Africa', 'South Africa', 'West Africa'];
+
+  function openLeaderModal(mode, row) {
+    leaderState = { mode, id: row ? row.id : null };
+    els.leaderModalTitle.textContent = mode === 'edit' ? 'Edit Leader' : 'New Leader';
+    const currentNote = row && row.photo
+      ? `Current photo is set. Choose a new one to replace it, or leave blank to keep it.`
+      : '';
+
+    els.leaderModalBody.innerHTML = `
+      <form id="leaderForm" style="display:flex;flex-direction:column;gap:16px;">
+        <div><label class="field-label">NAME</label><input class="field-input" required id="ldFieldName" placeholder="e.g. Jane Mwansa"></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">TITLE / ROLE</label><input class="field-input" id="ldFieldTitle" placeholder="e.g. Regional Director"></div>
+          <div style="flex:1;"><label class="field-label">REGION</label>
+            <select class="field-input" id="ldFieldRegion">
+              <option value="">— Select —</option>
+              ${LEADER_REGIONS.map((r) => `<option value="${Util.escapeHtml(r)}">${Util.escapeHtml(r)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div><label class="field-label">BIO</label><textarea class="field-input" id="ldFieldBio" placeholder="A short biography…"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">EMAIL</label><input class="field-input" type="email" id="ldFieldEmail" placeholder="name@cbmcafrica.org"></div>
+          <div style="flex:1;"><label class="field-label">PHONE</label><input class="field-input" id="ldFieldPhone" placeholder="+260 …"></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-end;">
+          <div style="flex:1;"><label class="field-label">PHOTO</label><input type="file" class="field-input" id="ldFieldPhoto" accept="image/png,image/jpeg,image/webp,image/gif"></div>
+          <div style="flex:1;"><label class="field-label">SORT ORDER</label><input class="field-input" type="number" id="ldFieldSort" value="0"></div>
+        </div>
+        ${currentNote ? `<p style="font-size:12.5px;color:var(--text-mute-3);margin-top:-8px;">${currentNote}</p>` : ''}
+        <div><label class="field-label">STATUS</label>
+          <select class="field-input" id="ldFieldStatus">
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
+          <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="leaderCancel">Cancel</button>
+          <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save leader'}</button>
+        </div>
+        <p class="form-error" id="leaderError" style="display:none;"></p>
+      </form>
+    `;
+
+    if (mode === 'edit' && row) {
+      document.getElementById('ldFieldName').value = row.name;
+      document.getElementById('ldFieldTitle').value = row.title || '';
+      document.getElementById('ldFieldRegion').value = row.region || '';
+      document.getElementById('ldFieldBio').value = row.bio || '';
+      document.getElementById('ldFieldEmail').value = row.email || '';
+      document.getElementById('ldFieldPhone').value = row.phone || '';
+      document.getElementById('ldFieldSort').value = row.sortOrder || 0;
+      document.getElementById('ldFieldStatus').value = row.status === 'Published' ? 'Published' : 'Draft';
+    }
+
+    document.getElementById('leaderCancel').addEventListener('click', closeLeaderModal);
+    document.getElementById('leaderForm').addEventListener('submit', submitLeaderForm);
+    els.leaderModal.classList.add('open');
+  }
+
+  function closeLeaderModal() {
+    els.leaderModal.classList.remove('open');
+  }
+
+  async function submitLeaderForm(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById('leaderError');
+    errorEl.style.display = 'none';
+
+    const name = document.getElementById('ldFieldName').value.trim();
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('title', document.getElementById('ldFieldTitle').value.trim());
+    fd.append('region', document.getElementById('ldFieldRegion').value);
+    fd.append('bio', document.getElementById('ldFieldBio').value.trim());
+    fd.append('email', document.getElementById('ldFieldEmail').value.trim());
+    fd.append('phone', document.getElementById('ldFieldPhone').value.trim());
+    fd.append('sortOrder', document.getElementById('ldFieldSort').value || '0');
+    fd.append('status', document.getElementById('ldFieldStatus').value);
+    const photoInput = document.getElementById('ldFieldPhoto');
+    if (photoInput.files[0]) fd.append('photo', photoInput.files[0]);
+
+    const url = leaderState.mode === 'edit'
+      ? `/api/admin/leaders.php?id=${leaderState.id}`
+      : '/api/admin/leaders.php';
+
+    try {
+      const res = await fetch(url, { method: 'POST', body: fd, credentials: 'same-origin' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save this leader.');
+
+      els.leaderModalBody.innerHTML = `
+        <div style="padding:16px 4px;text-align:center;">
+          <div class="success-icon">✓</div>
+          <div class="success-title" style="margin-top:16px;">${leaderState.mode === 'edit' ? 'Changes saved' : 'Leader saved'}</div>
+          <p class="success-text">"${Util.escapeHtml(name)}" ${leaderState.mode === 'edit' ? 'was updated.' : 'was added to your Leadership Team list.'}</p>
+          <button class="btn btn-navy" id="leaderDoneBtn" style="margin-top:18px;">Done</button>
+        </div>
+      `;
+      document.getElementById('leaderDoneBtn').addEventListener('click', async () => {
+        closeLeaderModal();
+        if (state.section === 'leaders') await reloadCurrentTable();
+      });
+    } catch (err) {
+      errorEl.textContent = err.message;
       errorEl.style.display = 'block';
     }
   }

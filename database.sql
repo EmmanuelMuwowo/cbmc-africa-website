@@ -97,11 +97,30 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS resources (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(300) NOT NULL,
-  author VARCHAR(200) NOT NULL DEFAULT '',
-  file_url VARCHAR(500) NOT NULL DEFAULT '',
+  description TEXT,
+  category VARCHAR(100) NOT NULL DEFAULT '',
+  file_path VARCHAR(500) NULL,
+  file_original_name VARCHAR(300) NULL,
+  external_url VARCHAR(500) NULL,
   published_date DATE NULL,
-  status ENUM('Published','Scheduled','Draft') NOT NULL DEFAULT 'Published',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  status ENUM('Published','Scheduled','Draft') NOT NULL DEFAULT 'Draft',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS leaders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  title VARCHAR(200) NOT NULL DEFAULT '',
+  region VARCHAR(100) NOT NULL DEFAULT '',
+  bio TEXT,
+  photo_url VARCHAR(500) NULL,
+  email VARCHAR(200) NOT NULL DEFAULT '',
+  phone VARCHAR(60) NOT NULL DEFAULT '',
+  sort_order INT NOT NULL DEFAULT 0,
+  status ENUM('Published','Draft') NOT NULL DEFAULT 'Draft',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS pages (
@@ -285,11 +304,11 @@ INSERT IGNORE INTO messages (name, email, message, replied) VALUES
 ('David Tembo', 'd.tembo@coppermine.zm', 'Interested in the Leadership Summit sponsorship packages. Could you send details?', 0),
 ('Grace Okafor', 'grace@okaforlaw.ng', 'Loved this week’s devotional on perseverance — sharing it with my whole office.', 1);
 
-INSERT IGNORE INTO resources (title, author, file_url, published_date, status) VALUES
-('Operation Timothy — Book 1 (PDF)', 'CBMC', '', '2026-06-01', 'Published'),
-('Connect3 Starter Guide', 'CBMC Africa', '', '2026-05-20', 'Published'),
-('Monday Manna Archive 2025', 'CBMC', '', '2026-01-12', 'Published'),
-('Leadership Summit Brochure 2026', 'CBMC Africa', '', NULL, 'Draft');
+INSERT IGNORE INTO resources (title, description, category, file_path, file_original_name, external_url, published_date, status) VALUES
+('Operation Timothy — Book 1', 'A discipleship curriculum for walking new and growing believers through the foundations of following Christ, one-to-one.', 'Discipleship', NULL, NULL, 'https://cbmcafrica.org/wp-content/uploads/', '2026-06-01', 'Published'),
+('Connect3 Starter Guide', 'Everything a team needs to launch a weekly Connect3 group in their city, from the first invitation to the first meeting.', 'Ministry Guide', NULL, NULL, 'https://cbmcafrica.org/wp-content/uploads/', '2026-05-20', 'Published'),
+('Monday Manna Archive 2025', 'A full year of Monday Manna devotionals collected into a single volume for personal or group study.', 'Devotional Archive', NULL, NULL, 'https://cbmcafrica.org/wp-content/uploads/', '2026-01-12', 'Published'),
+('Leadership Summit Brochure 2026', 'Session schedule, speaker bios and venue details for the Regional Leadership Summit.', 'Event Brochure', NULL, NULL, NULL, NULL, 'Draft');
 
 INSERT IGNORE INTO pages (slug, title, owner, status, updated_at) VALUES
 ('home', 'Home', '—', 'Published', '2026-06-02'),
