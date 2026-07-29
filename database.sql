@@ -91,8 +91,15 @@ CREATE TABLE IF NOT EXISTS messages (
   email VARCHAR(200) NOT NULL,
   message TEXT NOT NULL,
   replied TINYINT(1) NOT NULL DEFAULT 0,
+  reply_body TEXT NULL,
+  replied_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe to re-run: adds these columns if this table already existed without them.
+ALTER TABLE messages
+  ADD COLUMN IF NOT EXISTS reply_body TEXT NULL,
+  ADD COLUMN IF NOT EXISTS replied_at DATETIME NULL;
 
 CREATE TABLE IF NOT EXISTS resources (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -147,8 +154,15 @@ CREATE TABLE IF NOT EXISTS settings (
   phone VARCHAR(60) NOT NULL DEFAULT '+260 211 284102',
   address VARCHAR(300) NOT NULL DEFAULT 'Joseph Kabwe Road, No 32, PHI, Lusaka, Zambia',
   manna_email_enabled TINYINT(1) NOT NULL DEFAULT 1,
-  donate_url VARCHAR(300) NOT NULL DEFAULT 'https://cbmcafrica.org/donate/'
+  donate_url VARCHAR(300) NOT NULL DEFAULT 'https://cbmcafrica.org/donate/',
+  hero_type ENUM('image','video') NOT NULL DEFAULT 'image',
+  hero_url VARCHAR(500) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe to re-run: adds these columns if this table already existed without them.
+ALTER TABLE settings
+  ADD COLUMN IF NOT EXISTS hero_type ENUM('image','video') NOT NULL DEFAULT 'image',
+  ADD COLUMN IF NOT EXISTS hero_url VARCHAR(500) NULL;
 
 INSERT IGNORE INTO settings (id) VALUES (1);
 

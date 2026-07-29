@@ -7,7 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     json_response([
         'orgName' => $row['org_name'], 'publicEmail' => $row['public_email'],
         'phone' => $row['phone'], 'address' => $row['address'],
-        'mannaEmailEnabled' => (bool)$row['manna_email_enabled'], 'donateUrl' => $row['donate_url']
+        'mannaEmailEnabled' => (bool)$row['manna_email_enabled'], 'donateUrl' => $row['donate_url'],
+        'heroType' => $row['hero_type'], 'heroUrl' => $row['hero_url']
     ]);
 }
 

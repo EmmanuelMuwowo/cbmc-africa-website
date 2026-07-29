@@ -7,24 +7,35 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) json_error('Missing id.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $row = db()->prepare('SELECT image_url FROM devotionals WHERE id = ?');
+    $row->execute([$id]);
+    $found = $row->fetch();
+    if (!$found) json_error('Not found.', 404);
+
     $stmt = db()->prepare('DELETE FROM devotionals WHERE id = ?');
     $stmt->execute([$id]);
-    if ($stmt->rowCount() === 0) json_error('Not found.', 404);
+    delete_uploaded_file($found['image_url']);
     json_response(['ok' => true]);
 }
 
-require_method('PUT');
+require_method('POST');
 
-$body = json_body();
-$title = trim($body['title'] ?? '');
-$author = trim($body['author'] ?? '');
-$bodyText = trim($body['body'] ?? '');
-$status = valid_status($body['status'] ?? null);
-$date = trim($body['date'] ?? '');
+$title = trim($_POST['title'] ?? '');
+$author = trim($_POST['author'] ?? '');
+$bodyText = trim($_POST['body'] ?? '');
+$status = valid_status($_POST['status'] ?? null);
+$date = trim($_POST['date'] ?? '');
 
 if ($title === '' || $author === '') {
     json_error('Title and author are required.');
 }
+
+$existing = db()->prepare('SELECT image_url FROM devotionals WHERE id = ?');
+$existing->execute([$id]);
+$existingRow = $existing->fetch();
+if (!$existingRow) json_error('Not found.', 404);
+
+$newImageUrl = handle_image_upload('image', 'devotionals');
 
 $blocks = $bodyText !== '' ? [['t' => 'p', 'x' => mb_substr($bodyText, 0, 8000)]] : [];
 
@@ -34,14 +45,20 @@ if ($date !== '') {
     $sql .= ', devotional_date = ?';
     $params[] = $date;
 }
+if ($newImageUrl) {
+    $sql .= ', image_url = ?';
+    $params[] = $newImageUrl;
+}
 $sql .= ' WHERE id = ?';
 $params[] = $id;
 
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 
+if ($newImageUrl) {
+    delete_uploaded_file($existingRow['image_url']);
+}
+
 $row = db()->prepare('SELECT * FROM devotionals WHERE id = ?');
 $row->execute([$id]);
-$found = $row->fetch();
-if (!$found) json_error('Not found.', 404);
-json_response(serialize_devotional($found));
+json_response(serialize_devotional($row->fetch()));

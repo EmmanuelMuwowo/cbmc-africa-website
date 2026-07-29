@@ -9,12 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $body = json_body();
-    $title = trim($body['title'] ?? '');
-    $author = trim($body['author'] ?? '');
-    $bodyText = trim($body['body'] ?? '');
-    $status = valid_status($body['status'] ?? null);
-    $date = trim($body['date'] ?? '');
+    $title = trim($_POST['title'] ?? '');
+    $author = trim($_POST['author'] ?? '');
+    $bodyText = trim($_POST['body'] ?? '');
+    $status = valid_status($_POST['status'] ?? null);
+    $date = trim($_POST['date'] ?? '');
 
     if ($title === '' || $author === '') {
         json_error('Title and author are required.');
@@ -23,14 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $slug = slugify($title);
     $blocks = $bodyText !== '' ? [['t' => 'p', 'x' => mb_substr($bodyText, 0, 8000)]] : [];
     $dateValue = $date !== '' ? $date : date('Y-m-d');
+    $imageUrl = handle_image_upload('image', 'devotionals');
 
     $stmt = db()->prepare(
-        'INSERT INTO devotionals (slug, title, author, author_initials, devotional_date, excerpt, blocks, reflection, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, JSON_ARRAY(), ?)'
+        'INSERT INTO devotionals (slug, title, author, author_initials, devotional_date, excerpt, blocks, reflection, status, image_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, JSON_ARRAY(), ?, ?)'
     );
     $stmt->execute([
         $slug, mb_substr($title, 0, 300), mb_substr($author, 0, 200), initials($author),
-        $dateValue, mb_substr($bodyText, 0, 240), json_encode($blocks), $status
+        $dateValue, mb_substr($bodyText, 0, 240), json_encode($blocks), $status, $imageUrl
     ]);
 
     $id = (int)db()->lastInsertId();
