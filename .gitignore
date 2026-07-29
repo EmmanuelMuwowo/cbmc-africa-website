@@ -4,5 +4,8 @@ public_html/uploads/*
 !public_html/uploads/resources/
 public_html/uploads/resources/*
 !public_html/uploads/resources/.gitkeep
+!public_html/uploads/leaders/
+public_html/uploads/leaders/*
+!public_html/uploads/leaders/.gitkeep
 *.log
 .DS_Store

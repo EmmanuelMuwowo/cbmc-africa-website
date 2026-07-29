@@ -52,6 +52,21 @@ function serialize_resource(array $row): array {
     ];
 }
 
+function serialize_leader(array $row): array {
+    return [
+        'id' => (int)$row['id'],
+        'name' => $row['name'],
+        'title' => $row['title'],
+        'region' => $row['region'],
+        'bio' => $row['bio'],
+        'photo' => $row['photo_url'],
+        'email' => $row['email'],
+        'phone' => $row['phone'],
+        'sortOrder' => (int)$row['sort_order'],
+        'status' => $row['status']
+    ];
+}
+
 function serialize_event(array $row): array {
     $ts = strtotime($row['event_date']);
     return [
