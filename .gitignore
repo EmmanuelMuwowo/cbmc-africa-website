@@ -7,5 +7,11 @@ public_html/uploads/resources/*
 !public_html/uploads/leaders/
 public_html/uploads/leaders/*
 !public_html/uploads/leaders/.gitkeep
+!public_html/uploads/devotionals/
+public_html/uploads/devotionals/*
+!public_html/uploads/devotionals/.gitkeep
+!public_html/uploads/hero/
+public_html/uploads/hero/*
+!public_html/uploads/hero/.gitkeep
 *.log
 .DS_Store

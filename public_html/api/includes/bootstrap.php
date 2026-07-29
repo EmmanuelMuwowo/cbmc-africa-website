@@ -61,6 +61,48 @@ function valid_status(?string $status): string {
     return in_array($status, ['Published', 'Scheduled', 'Draft'], true) ? $status : 'Draft';
 }
 
+function handle_upload(string $field, string $subdir, array $allowedMimes, int $maxBytes = 8 * 1024 * 1024): ?array {
+    if (empty($_FILES[$field]) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) return null;
+    if ($_FILES[$field]['error'] !== UPLOAD_ERR_OK) json_error('Upload failed.');
+
+    $file = $_FILES[$field];
+    if ($file['size'] > $maxBytes) {
+        json_error('File is too large (max ' . round($maxBytes / (1024 * 1024)) . 'MB).');
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!isset($allowedMimes[$mime])) {
+        json_error('Unsupported file type.');
+    }
+
+    $ext = $allowedMimes[$mime];
+    $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+    $destDir = __DIR__ . '/../../uploads/' . $subdir;
+    if (!is_dir($destDir)) @mkdir($destDir, 0775, true);
+    $dest = $destDir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        json_error('Could not save the uploaded file.', 500);
+    }
+
+    return ['url' => '/uploads/' . $subdir . '/' . $filename, 'mime' => $mime];
+}
+
+function handle_image_upload(string $field, string $subdir): ?string {
+    $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+    $result = handle_upload($field, $subdir, $allowed);
+    return $result ? $result['url'] : null;
+}
+
+function delete_uploaded_file(?string $url): void {
+    if (!$url || !str_starts_with($url, '/uploads/')) return;
+    $diskPath = __DIR__ . '/../../' . ltrim($url, '/');
+    if (is_file($diskPath)) @unlink($diskPath);
+}
+
 function slugify(string $title): string {
     $base = strtolower(trim($title));
     $base = preg_replace('/[^a-z0-9]+/', '-', $base);

@@ -69,7 +69,11 @@
     leaderModal: document.getElementById('leaderModal'),
     leaderModalClose: document.getElementById('leaderModalClose'),
     leaderModalTitle: document.getElementById('leaderModalTitle'),
-    leaderModalBody: document.getElementById('leaderModalBody')
+    leaderModalBody: document.getElementById('leaderModalBody'),
+    replyModal: document.getElementById('replyModal'),
+    replyModalClose: document.getElementById('replyModalClose'),
+    replyModalTitle: document.getElementById('replyModalTitle'),
+    replyModalBody: document.getElementById('replyModalBody')
   };
 
   function badgePill(status) {
@@ -107,6 +111,8 @@
     els.eventComposeModal.addEventListener('click', (e) => { if (e.target === els.eventComposeModal) closeEventModal(); });
     els.leaderModalClose.addEventListener('click', closeLeaderModal);
     els.leaderModal.addEventListener('click', (e) => { if (e.target === els.leaderModal) closeLeaderModal(); });
+    els.replyModalClose.addEventListener('click', closeReplyModal);
+    els.replyModal.addEventListener('click', (e) => { if (e.target === els.replyModal) closeReplyModal(); });
   }
 
   async function refreshMsgBadge() {
@@ -389,26 +395,82 @@
         <div style="min-width:0;flex:1;">
           <div style="display:flex;gap:10px;align-items:center;"><span style="font-weight:600;font-size:14.5px;">${Util.escapeHtml(m.name)}</span><span style="font-size:12px;color:var(--text-mute-4);">${Util.escapeHtml(m.email)}</span></div>
           <div style="font-size:14px;color:var(--text-body);margin-top:5px;line-height:1.5;">${Util.escapeHtml(m.preview)}</div>
+          ${m.replied ? `<div style="font-size:12.5px;color:var(--text-mute-3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border-cream-2);"><strong style="color:var(--green);">Replied${m.repliedAt ? ' · ' + Util.escapeHtml(m.repliedAt) : ''}:</strong> ${Util.escapeHtml(m.replyBody || '')}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
           <span style="font-size:11.5px;color:var(--text-mute-4);">${Util.escapeHtml(m.time)}</span>
-          <button class="reply-btn" data-id="${m.id}" ${m.replied ? 'disabled' : ''}>${m.replied ? 'Replied ✓' : 'Mark replied'}</button>
+          <button class="reply-btn" data-id="${m.id}">${m.replied ? 'Reply again' : 'Reply'}</button>
         </div>
       </div>
     `).join('');
     document.getElementById('inboxRows').querySelectorAll('.reply-btn').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        try {
-          await Api.patch(`/api/admin/message.php?id=${btn.dataset.id}`);
-          btn.textContent = 'Replied ✓';
-          await refreshMsgBadge();
-        } catch (err) {
-          btn.disabled = false;
-          alert(err.message || 'Could not update this message.');
-        }
+      btn.addEventListener('click', () => {
+        const row = rows.find((r) => String(r.id) === btn.dataset.id);
+        if (row) openReplyModal(row);
       });
     });
+  }
+
+  // ---------- Reply to contact message modal ----------
+  let replyState = { id: null };
+
+  function openReplyModal(row) {
+    replyState = { id: row.id };
+    els.replyModalTitle.textContent = `Reply to ${row.name}`;
+    els.replyModalBody.innerHTML = `
+      <form id="replyForm" style="display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <label class="field-label">TO</label>
+          <div style="font-size:14px;color:var(--text-body);padding:10px 0;">${Util.escapeHtml(row.name)} &lt;${Util.escapeHtml(row.email)}&gt;</div>
+        </div>
+        <div>
+          <label class="field-label">THEIR MESSAGE</label>
+          <div style="font-size:13.5px;color:var(--text-mute-3);background:var(--cream);border-radius:12px;padding:12px 14px;line-height:1.5;max-height:120px;overflow:auto;">${Util.escapeHtml(row.preview)}</div>
+        </div>
+        <div><label class="field-label">YOUR REPLY</label><textarea class="field-input" required id="replyFieldBody" placeholder="Write your reply…">${row.replied ? Util.escapeHtml(row.replyBody || '') : ''}</textarea></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
+          <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="replyCancel">Cancel</button>
+          <button type="submit" class="btn btn-gold">Send reply</button>
+        </div>
+        <p class="form-error" id="replyError" style="display:none;"></p>
+      </form>
+    `;
+    document.getElementById('replyCancel').addEventListener('click', closeReplyModal);
+    document.getElementById('replyForm').addEventListener('submit', submitReply);
+    els.replyModal.classList.add('open');
+  }
+
+  function closeReplyModal() {
+    els.replyModal.classList.remove('open');
+  }
+
+  async function submitReply(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById('replyError');
+    errorEl.style.display = 'none';
+    const body = document.getElementById('replyFieldBody').value.trim();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await Api.post(`/api/admin/message-reply.php?id=${replyState.id}`, { body });
+      els.replyModalBody.innerHTML = `
+        <div style="padding:16px 4px;text-align:center;">
+          <div class="success-icon">✓</div>
+          <div class="success-title" style="margin-top:16px;">Reply sent</div>
+          <p class="success-text">Your email has been sent.</p>
+          <button class="btn btn-navy" id="replyDoneBtn" style="margin-top:18px;">Done</button>
+        </div>
+      `;
+      document.getElementById('replyDoneBtn').addEventListener('click', async () => {
+        closeReplyModal();
+        if (state.section === 'msgs') await reloadCurrentTable();
+        await refreshMsgBadge();
+      });
+    } catch (err) {
+      submitBtn.disabled = false;
+      errorEl.textContent = err.message || 'Could not send this reply.';
+      errorEl.style.display = 'block';
+    }
   }
 
   // ---------- Media ----------
@@ -494,6 +556,29 @@
           <p class="success-text" id="settingsSaved" style="display:none;color:var(--green);font-weight:600;">Saved.</p>
         </form>
       </div>
+
+      <div class="settings-card" style="margin-top:20px;">
+        <div class="settings-title">Homepage hero</div>
+        <p style="font-size:13px;color:var(--text-mute-3);margin-top:-10px;margin-bottom:4px;">The full-width banner behind the headline on your homepage. Use an image, or a short looping video.</p>
+        <form id="heroForm" style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <label class="field-label">TYPE</label>
+            <div style="display:flex;gap:16px;font-size:14px;color:var(--text-body);margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:6px;"><input type="radio" name="heroType" value="image" ${s.heroType !== 'video' ? 'checked' : ''}> Image</label>
+              <label style="display:flex;align-items:center;gap:6px;"><input type="radio" name="heroType" value="video" ${s.heroType === 'video' ? 'checked' : ''}> Video</label>
+            </div>
+          </div>
+          <div><label class="field-label">UPLOAD A FILE</label><input type="file" class="field-input" id="heroFieldFile"></div>
+          <div><label class="field-label">…OR AN EXTERNAL URL</label><input class="field-input" id="heroFieldUrl" placeholder="https://…/banner.jpg or .mp4"></div>
+          <p style="font-size:12.5px;color:var(--text-mute-3);margin-top:-8px;">
+            ${s.heroUrl ? `Current: <a href="${Util.escapeHtml(s.heroUrl)}" target="_blank" rel="noopener">${Util.escapeHtml(s.heroUrl)}</a>` : 'No custom hero set yet — the site is showing its default banner.'}
+            Videos larger than a few MB may exceed your host's upload limit — an external URL avoids that.
+          </p>
+          <button type="submit" class="btn btn-gold" style="align-self:flex-start;">Save hero</button>
+          <p class="form-error" id="heroError" style="display:none;"></p>
+          <p class="success-text" id="heroSaved" style="display:none;color:var(--green);font-weight:600;">Saved.</p>
+        </form>
+      </div>
     `;
     document.getElementById('mannaToggle').addEventListener('click', async (e) => {
       const btn = e.currentTarget;
@@ -520,12 +605,34 @@
         errorEl.style.display = 'block';
       }
     });
+    document.getElementById('heroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('heroError');
+      const savedEl = document.getElementById('heroSaved');
+      errorEl.style.display = 'none'; savedEl.style.display = 'none';
+      const fd = new FormData();
+      fd.append('heroType', document.querySelector('input[name="heroType"]:checked').value);
+      fd.append('heroUrl', document.getElementById('heroFieldUrl').value.trim());
+      const fileInput = document.getElementById('heroFieldFile');
+      if (fileInput.files[0]) fd.append('heroFile', fileInput.files[0]);
+      try {
+        const res = await fetch('/api/admin/hero.php', { method: 'POST', body: fd, credentials: 'same-origin' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save the hero.');
+        state.cache.settings.heroType = data.heroType;
+        state.cache.settings.heroUrl = data.heroUrl;
+        savedEl.style.display = 'block';
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+    });
   }
 
   // ---------- Compose modal (Monday Manna / News create+edit) ----------
   const COMPOSE_LABELS = {
-    manna: { noun: 'Monday Manna', bodyLabel: 'DEVOTIONAL BODY', placeholder: 'Write the meditation…', section: 'manna' },
-    news: { noun: 'News Article', bodyLabel: 'ARTICLE BODY', placeholder: 'Write the article…', section: 'news' }
+    manna: { noun: 'Monday Manna', bodyLabel: 'DEVOTIONAL BODY', placeholder: 'Write the meditation…', section: 'manna', hasImage: true },
+    news: { noun: 'News Article', bodyLabel: 'ARTICLE BODY', placeholder: 'Write the article…', section: 'news', hasImage: false }
   };
 
   function openCompose(mode, row, type) {
@@ -547,6 +654,9 @@
           </div>
         </div>
         <div><label class="field-label">${labels.bodyLabel}</label><textarea class="field-input" id="composeFieldBody" placeholder="${labels.placeholder}"></textarea></div>
+        ${labels.hasImage ? `<div><label class="field-label">IMAGE</label><input type="file" class="field-input" id="composeFieldImage" accept="image/png,image/jpeg,image/webp,image/gif">
+          ${mode === 'edit' && row && row.image ? `<p style="font-size:12.5px;color:var(--text-mute-3);margin-top:8px;">Current image is set. Choose a new one to replace it, or leave blank to keep it.</p>` : ''}
+        </div>` : ''}
         <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
           <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="composeCancel">Cancel</button>
           <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save'}</button>
@@ -577,7 +687,7 @@
     e.preventDefault();
     const errorEl = document.getElementById('composeError');
     errorEl.style.display = 'none';
-    const payload = {
+    const fields = {
       title: document.getElementById('composeFieldTitle').value.trim(),
       author: document.getElementById('composeFieldAuthor').value.trim(),
       date: document.getElementById('composeFieldDate').value,
@@ -588,11 +698,21 @@
     const basePath = type === 'manna' ? 'devotional' : 'news-item';
     const collectionPath = type === 'manna' ? 'devotionals' : 'news';
     try {
-      if (mode === 'edit') {
-        await Api.put(`/api/admin/${basePath}.php?id=${id}`, payload);
+      if (COMPOSE_LABELS[type].hasImage) {
+        const fd = new FormData();
+        Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+        const imageInput = document.getElementById('composeFieldImage');
+        if (imageInput && imageInput.files[0]) fd.append('image', imageInput.files[0]);
+        const url = mode === 'edit' ? `/api/admin/${basePath}.php?id=${id}` : `/api/admin/${collectionPath}.php`;
+        const res = await fetch(url, { method: 'POST', body: fd, credentials: 'same-origin' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save this item.');
+      } else if (mode === 'edit') {
+        await Api.put(`/api/admin/${basePath}.php?id=${id}`, fields);
       } else {
-        await Api.post(`/api/admin/${collectionPath}.php`, payload);
+        await Api.post(`/api/admin/${collectionPath}.php`, fields);
       }
+      const payload = fields;
       els.composeBody.innerHTML = `
         <div style="padding:16px 4px;text-align:center;">
           <div class="success-icon">✓</div>
