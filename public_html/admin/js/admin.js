@@ -7,6 +7,7 @@
     { key: 'news', label: 'News & Articles' },
     { key: 'events', label: 'Events' },
     { key: 'resources', label: 'Resources' },
+    { key: 'prayer', label: 'Prayer Page' },
     { key: 'subs', label: 'Subscribers' },
     { key: 'msgs', label: 'Contact Messages' },
     { key: 'media', label: 'Media Library' },
@@ -21,6 +22,7 @@
     news: { title: 'News & Articles', subtitle: 'Featured stories from across the movement.' },
     events: { title: 'Events', subtitle: 'Summits, forums, trainings and gatherings.' },
     resources: { title: 'Resources', subtitle: 'Downloadable studies, guides and media.' },
+    prayer: { title: 'Prayer Page', subtitle: 'The cards shown on the public Prayer page.' },
     subs: { title: 'Subscribers', subtitle: 'People receiving the weekly Monday Manna email.' },
     msgs: { title: 'Contact Messages', subtitle: 'Enquiries submitted through the public site.' },
     media: { title: 'Media Library', subtitle: 'Images and files used across the site.' },
@@ -73,7 +75,11 @@
     replyModal: document.getElementById('replyModal'),
     replyModalClose: document.getElementById('replyModalClose'),
     replyModalTitle: document.getElementById('replyModalTitle'),
-    replyModalBody: document.getElementById('replyModalBody')
+    replyModalBody: document.getElementById('replyModalBody'),
+    prayerModal: document.getElementById('prayerModal'),
+    prayerModalClose: document.getElementById('prayerModalClose'),
+    prayerModalTitle: document.getElementById('prayerModalTitle'),
+    prayerModalBody: document.getElementById('prayerModalBody')
   };
 
   function badgePill(status) {
@@ -113,6 +119,8 @@
     els.leaderModal.addEventListener('click', (e) => { if (e.target === els.leaderModal) closeLeaderModal(); });
     els.replyModalClose.addEventListener('click', closeReplyModal);
     els.replyModal.addEventListener('click', (e) => { if (e.target === els.replyModal) closeReplyModal(); });
+    els.prayerModalClose.addEventListener('click', closePrayerModal);
+    els.prayerModal.addEventListener('click', (e) => { if (e.target === els.prayerModal) closePrayerModal(); });
   }
 
   async function refreshMsgBadge() {
@@ -165,6 +173,7 @@
       pages: '/api/admin/pages.php',
       leaders: '/api/admin/leaders.php',
       resources: '/api/admin/resources.php',
+      prayer: '/api/admin/prayer-cards.php',
       subs: '/api/admin/subscribers.php',
       msgs: '/api/admin/messages.php',
       media: '/api/admin/media.php',
@@ -301,6 +310,16 @@
       onAdd: () => openResourceModal('create'),
       onEdit: (r) => openResourceModal('edit', r),
       onDelete: (r) => deleteItem(`/api/admin/resources.php?id=${r.id}`, r.title)
+    },
+    prayer: {
+      heading: 'Prayer Page Cards', addLabel: '+ Add Card',
+      cols: ['Title', 'Status', ''],
+      colsCss: '3fr 1fr 1.1fr',
+      filter: (q, r) => match(q, r.title),
+      cells: (r) => [r.title, badgePill(r.status)],
+      onAdd: () => openPrayerModal('create'),
+      onEdit: (r) => openPrayerModal('edit', r),
+      onDelete: (r) => deleteItem(`/api/admin/prayer-card.php?id=${r.id}`, r.title)
     },
     leaders: {
       heading: 'Leadership Team', addLabel: '+ Add Leader',
@@ -748,7 +767,13 @@
         <div><label class="field-label">TITLE</label><input class="field-input" required id="resFieldTitle" placeholder="e.g. Connect3 Starter Guide"></div>
         <div><label class="field-label">DESCRIPTION</label><textarea class="field-input" id="resFieldDescription" placeholder="What is this resource, and who is it for?"></textarea></div>
         <div style="display:flex;gap:12px;">
-          <div style="flex:1;"><label class="field-label">CATEGORY</label><input class="field-input" id="resFieldCategory" placeholder="e.g. Ministry Guide"></div>
+          <div style="flex:1;"><label class="field-label">CATEGORY</label><input class="field-input" id="resFieldCategory" list="resCategoryList" placeholder="e.g. Ministry Guide">
+            <datalist id="resCategoryList">
+              <option value="Operation Timothy">
+              <option value="Living Proof">
+              <option value="Ministry Guide">
+            </datalist>
+          </div>
           <div style="flex:1;"><label class="field-label">PUBLISHED DATE</label><input class="field-input" type="date" id="resFieldDate"></div>
         </div>
         <div><label class="field-label">STATUS</label>
@@ -1065,6 +1090,88 @@
       });
     } catch (err) {
       errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // ---------- Prayer page card create/edit modal ----------
+  let prayerState = { mode: null, id: null };
+
+  function openPrayerModal(mode, row) {
+    prayerState = { mode, id: row ? row.id : null };
+    els.prayerModalTitle.textContent = mode === 'edit' ? 'Edit Prayer Card' : 'New Prayer Card';
+    els.prayerModalBody.innerHTML = `
+      <form id="prayerForm" style="display:flex;flex-direction:column;gap:16px;">
+        <div><label class="field-label">TITLE</label><input class="field-input" required id="prFieldTitle" placeholder="e.g. An individual and team function"></div>
+        <div><label class="field-label">BODY</label><textarea class="field-input" required id="prFieldBody" placeholder="Write the card text… leave a blank line between paragraphs." style="min-height:160px;"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;"><label class="field-label">SORT ORDER</label><input class="field-input" type="number" id="prFieldSort" value="0"></div>
+          <div style="flex:1;"><label class="field-label">STATUS</label>
+            <select class="field-input" id="prFieldStatus">
+              <option value="Draft">Draft</option>
+              <option value="Published">Published</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;">
+          <button type="button" class="btn" style="background:var(--cream);color:var(--text-muted);font-weight:600;" id="prayerCancel">Cancel</button>
+          <button type="submit" class="btn btn-gold">${mode === 'edit' ? 'Save changes' : 'Save card'}</button>
+        </div>
+        <p class="form-error" id="prayerError" style="display:none;"></p>
+      </form>
+    `;
+
+    if (mode === 'edit' && row) {
+      document.getElementById('prFieldTitle').value = row.title;
+      document.getElementById('prFieldBody').value = row.body;
+      document.getElementById('prFieldSort').value = row.sortOrder || 0;
+      document.getElementById('prFieldStatus').value = row.status === 'Published' ? 'Published' : 'Draft';
+    } else {
+      document.getElementById('prFieldStatus').value = 'Published';
+    }
+
+    document.getElementById('prayerCancel').addEventListener('click', closePrayerModal);
+    document.getElementById('prayerForm').addEventListener('submit', submitPrayerForm);
+    els.prayerModal.classList.add('open');
+  }
+
+  function closePrayerModal() {
+    els.prayerModal.classList.remove('open');
+  }
+
+  async function submitPrayerForm(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById('prayerError');
+    errorEl.style.display = 'none';
+
+    const title = document.getElementById('prFieldTitle').value.trim();
+    const payload = {
+      title,
+      body: document.getElementById('prFieldBody').value.trim(),
+      sortOrder: Number(document.getElementById('prFieldSort').value || 0),
+      status: document.getElementById('prFieldStatus').value
+    };
+
+    try {
+      if (prayerState.mode === 'edit') {
+        await Api.put(`/api/admin/prayer-card.php?id=${prayerState.id}`, payload);
+      } else {
+        await Api.post('/api/admin/prayer-cards.php', payload);
+      }
+      els.prayerModalBody.innerHTML = `
+        <div style="padding:16px 4px;text-align:center;">
+          <div class="success-icon">✓</div>
+          <div class="success-title" style="margin-top:16px;">${prayerState.mode === 'edit' ? 'Changes saved' : 'Card saved'}</div>
+          <p class="success-text">"${Util.escapeHtml(title)}" ${prayerState.mode === 'edit' ? 'was updated.' : 'was added to the Prayer page.'}</p>
+          <button class="btn btn-navy" id="prayerDoneBtn" style="margin-top:18px;">Done</button>
+        </div>
+      `;
+      document.getElementById('prayerDoneBtn').addEventListener('click', async () => {
+        closePrayerModal();
+        if (state.section === 'prayer') await reloadCurrentTable();
+      });
+    } catch (err) {
+      errorEl.textContent = err.message || 'Could not save this card.';
       errorEl.style.display = 'block';
     }
   }

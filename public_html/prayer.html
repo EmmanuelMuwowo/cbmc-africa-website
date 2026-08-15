@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prayer — CBMC Africa</title>
+<title>Prayer  CBMC Africa</title>
 <meta name="description" content="Prayer resources from CBMC Africa.">
 <link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="images/cbmc-logo.png">
 </head>
 <body>
 
 <header class="site-header">
   <div class="site-header-inner">
     <a href="index.html" class="brand">
-      <span class="brand-mark">C<span>.</span></span>
+      <img src="images/cbmc-logo.png" alt="CBMC Africa" class="brand-logo">
       <span class="brand-text">
-        <span class="brand-name">CBMC Africa</span>
         <span class="brand-sub">MARKETPLACE MINISTRY</span>
       </span>
     </a>
@@ -72,7 +72,7 @@
 </header>
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-menu-top">
-    <span class="brand-name serif">CBMC Africa</span>
+    <span class="logo-chip"><img src="images/cbmc-logo.png" alt="CBMC Africa"></span>
     <button class="mobile-close" id="mobileClose" aria-label="Close menu">×</button>
   </div>
   <nav class="mobile-nav">
@@ -118,12 +118,7 @@
 </section>
 
 <section class="section-tight section-cream">
-  <div class="form-card">
-    <div class="form-title">An individual and team function</div>
-    <p style="color:var(--text-muted);font-size:15px;line-height:1.65;margin-top:14px;">Prayer, in the context of CBMC's ministry, is both an individual and a team function — the foundational practice that everything else in the ministry process is built on. Teams pray with and for one another and for the colleagues God has placed around them, trusting Him to move in the marketplace.</p>
-    <p style="color:var(--text-muted);font-size:15px;line-height:1.65;margin-top:14px;">Looking for a simple way to start? Ask your Connect3 team about a Top Ten Prayer Card — a short, printable list to help focus your prayer time each week.</p>
-    <a href="resources.html" class="btn btn-navy" style="margin-top:20px;">Browse all resources →</a>
-  </div>
+  <div class="wrap-narrow" id="prayerCards"><div class="skeleton-text">Loading…</div></div>
 </section>
 
 </main>
@@ -131,7 +126,7 @@
 <footer class="site-footer">
   <div class="footer-grid">
     <div>
-      <div class="footer-brand"><span class="mark">C.</span><span class="name">CBMC Africa</span></div>
+      <div class="footer-brand"><span class="logo-chip"><img src="images/cbmc-logo.png" alt="CBMC Africa"></span></div>
       <p class="footer-desc">An interdenominational, evangelical Christian organization comprised of national associations around Africa.</p>
     </div>
     <div class="footer-col">
@@ -167,6 +162,9 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/util.js"></script>
 <script src="js/layout.js"></script>
+<script src="js/prayer.js"></script>
 </body>
 </html>
