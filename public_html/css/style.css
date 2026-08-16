@@ -353,7 +353,5 @@ textarea.field-input { min-height: 130px; resize: vertical; }
 .footer-region { color: #86868b; font-size: 14.5px; }
 .footer-contact { font-size: 14.5px; line-height: 1.85; margin-top: 16px; color: #86868b; }
 .footer-bottom { max-width: 1220px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,.1); padding: 20px 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 12.5px; color: #6e6e73; }
-.footer-bottom a, .footer-bottom button { margin-left: auto; color: #6e6e73; font-size: 12.5px; background: none; }
-.footer-bottom a:hover, .footer-bottom button:hover { color: #fff; }
 
 .skeleton-text { color: var(--text-mute-4); text-align: center; padding: 40px; }

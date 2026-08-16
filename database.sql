@@ -35,9 +35,13 @@ CREATE TABLE IF NOT EXISTS devotionals (
   passages VARCHAR(500),
   image_url VARCHAR(500),
   status ENUM('Published','Scheduled','Draft') NOT NULL DEFAULT 'Published',
+  emailed_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe to re-run: adds this column if this table already existed without it.
+ALTER TABLE devotionals ADD COLUMN IF NOT EXISTS emailed_at DATETIME NULL;
 
 CREATE TABLE IF NOT EXISTS news (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -82,8 +86,12 @@ CREATE TABLE IF NOT EXISTS subscribers (
   name VARCHAR(200) NOT NULL,
   email VARCHAR(200) NOT NULL UNIQUE,
   region VARCHAR(100) NOT NULL DEFAULT '',
+  unsubscribe_token VARCHAR(64) NOT NULL DEFAULT '',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe to re-run: adds this column if this table already existed without it.
+ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS unsubscribe_token VARCHAR(64) NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS messages (
   id INT AUTO_INCREMENT PRIMARY KEY,

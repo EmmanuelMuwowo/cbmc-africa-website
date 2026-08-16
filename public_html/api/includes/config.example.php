@@ -12,3 +12,10 @@ define('APP_SESSION_NAME', 'cbmc_admin_session');
 
 // CBMC Africa's real donate page - the "Give" buttons link here.
 define('DONATE_URL', 'https://cbmcafrica.org/donate/');
+
+// Your site's real public URL (no trailing slash) - used to build links inside emails.
+define('SITE_URL', 'https://cbmcafrica.org');
+
+// Any long random string - protects the weekly-email cron endpoint from being
+// triggered by strangers when called over HTTP instead of the command line.
+define('MANNA_CRON_KEY', 'change-this-to-a-long-random-string');

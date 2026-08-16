@@ -565,7 +565,7 @@
           <div class="settings-field"><label>PHONE</label><input id="setPhone" value="${Util.escapeHtml(s.phone)}"></div>
           <div class="settings-field"><label>ADDRESS</label><input id="setAddress" value="${Util.escapeHtml(s.address)}"></div>
           <div class="settings-toggle-row">
-            <div><div style="font-weight:600;font-size:14px;">Weekly Monday Manna email</div><div style="font-size:12.5px;color:var(--text-mute-3);">Auto-send every Monday at 6:00 AM</div></div>
+            <div><div style="font-weight:600;font-size:14px;">Weekly Monday Manna email</div><div style="font-size:12.5px;color:var(--text-mute-3);">Auto-send every Monday at 6:00 AM (requires a cron job on your host — see cron/send-manna.php)</div></div>
             <button type="button" class="toggle-switch" id="mannaToggle" style="background:${s.mannaEmailEnabled ? '#1a8a3e' : '#d2d2d7'};">
               <span class="toggle-knob" style="left:${s.mannaEmailEnabled ? '23px' : '3px'};"></span>
             </button>
@@ -574,6 +574,12 @@
           <p class="form-error" id="settingsError" style="display:none;"></p>
           <p class="success-text" id="settingsSaved" style="display:none;color:var(--green);font-weight:600;">Saved.</p>
         </form>
+        <div style="border-top:1px solid var(--border-cream-2);margin-top:22px;padding-top:18px;">
+          <div style="font-weight:600;font-size:14px;">Send this week's Monday Manna now</div>
+          <p style="font-size:12.5px;color:var(--text-mute-3);margin-top:4px;">Emails the newest published devotional that hasn't been sent yet. Safe to click — already-sent devotionals are skipped automatically.</p>
+          <button type="button" class="btn btn-navy" id="mannaSendNowBtn" style="margin-top:10px;">Send now</button>
+          <p id="mannaSendResult" style="font-size:13px;margin-top:10px;"></p>
+        </div>
       </div>
 
       <div class="settings-card" style="margin-top:20px;">
@@ -605,6 +611,34 @@
       btn.style.background = res.mannaEmailEnabled ? '#1a8a3e' : '#d2d2d7';
       btn.querySelector('.toggle-knob').style.left = res.mannaEmailEnabled ? '23px' : '3px';
       state.cache.settings.mannaEmailEnabled = res.mannaEmailEnabled;
+    });
+    document.getElementById('mannaSendNowBtn').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const resultEl = document.getElementById('mannaSendResult');
+      btn.disabled = true;
+      resultEl.style.color = 'var(--text-mute-3)';
+      resultEl.textContent = 'Sending…';
+      try {
+        const res = await Api.post('/api/admin/manna-send-now.php');
+        if (!res.sent) {
+          const reasons = {
+            disabled: 'Weekly email is turned off above — enable it first.',
+            nothing_due: 'Nothing to send — no new published devotional waiting to go out.',
+            no_subscribers: 'No subscribers to send to yet.'
+          };
+          resultEl.textContent = reasons[res.reason] || 'Nothing was sent.';
+        } else {
+          const allFailed = res.devotionals.every((d) => d.sent === 0 && d.failed > 0);
+          resultEl.style.color = allFailed ? '#c0362c' : 'var(--green)';
+          resultEl.textContent = res.devotionals.map((d) => `${d.sent === 0 && d.failed > 0 ? 'Could not send' : 'Sent'} "${d.title}" to ${d.sent} subscriber(s)${d.failed ? `, ${d.failed} failed` : ''}.`).join(' ')
+            + (allFailed ? ' Your server’s mail (PHP mail()/sendmail) may not be configured yet - check with your host. This devotional will be retried next time.' : '');
+        }
+      } catch (err) {
+        resultEl.style.color = '#c0362c';
+        resultEl.textContent = err.message || 'Could not send right now.';
+      } finally {
+        btn.disabled = false;
+      }
     });
     document.getElementById('settingsForm').addEventListener('submit', async (e) => {
       e.preventDefault();
