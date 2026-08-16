@@ -115,6 +115,23 @@ CREATE TABLE IF NOT EXISTS resources (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS prayer_cards (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(300) NOT NULL,
+  body TEXT NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  status ENUM('Published','Draft') NOT NULL DEFAULT 'Published',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO prayer_cards (id, title, body, sort_order, status) VALUES
+(1, 'An individual and team function',
+'Prayer, in the context of CBMC''s ministry, is both an individual and a team function — the foundational practice that everything else in the ministry process is built on. Teams pray with and for one another and for the colleagues God has placed around them, trusting Him to move in the marketplace.
+
+Looking for a simple way to start? Ask your Connect3 team about a Top Ten Prayer Card — a short, printable list to help focus your prayer time each week.',
+0, 'Published');
+
 CREATE TABLE IF NOT EXISTS leaders (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,

@@ -52,6 +52,16 @@ function serialize_resource(array $row): array {
     ];
 }
 
+function serialize_prayer_card(array $row): array {
+    return [
+        'id' => (int)$row['id'],
+        'title' => $row['title'],
+        'body' => $row['body'],
+        'sortOrder' => (int)$row['sort_order'],
+        'status' => $row['status']
+    ];
+}
+
 function serialize_leader(array $row): array {
     return [
         'id' => (int)$row['id'],

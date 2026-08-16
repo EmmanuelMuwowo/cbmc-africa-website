@@ -6,13 +6,14 @@
 <title>Admin — CBMC Africa</title>
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="css/admin.css">
+<link rel="icon" href="../images/cbmc-logo.png">
 </head>
 <body>
 
 <div class="admin-shell">
   <aside class="admin-sidebar">
     <div class="admin-brand">
-      <div class="admin-brand-mark">CBMC<span>.</span></div>
+      <img src="../images/cbmc-logo.png" alt="CBMC Africa" class="admin-brand-logo">
       <div class="admin-brand-sub">ADMIN · CONTENT MANAGER</div>
     </div>
     <nav id="adminNav"></nav>
@@ -57,6 +58,17 @@
       <button class="modal-close" id="resourceModalClose" style="position:static;color:#86868b;margin-left:auto;">×</button>
     </div>
     <div id="resourceModalBody" style="padding:22px 24px;overflow:auto;max-height:70vh;"></div>
+  </div>
+</div>
+
+<!-- Add / edit Prayer card modal -->
+<div class="modal-overlay" id="prayerModal">
+  <div class="modal-box" style="max-width:540px;">
+    <div style="display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border-cream-2);">
+      <div class="serif" style="font-size:19px;font-weight:600;" id="prayerModalTitle">New Prayer Card</div>
+      <button class="modal-close" id="prayerModalClose" style="position:static;color:#86868b;margin-left:auto;">×</button>
+    </div>
+    <div id="prayerModalBody" style="padding:22px 24px;overflow:auto;max-height:75vh;"></div>
   </div>
 </div>
 
