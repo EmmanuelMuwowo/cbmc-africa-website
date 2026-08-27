@@ -18,4 +18,6 @@ $stmt = db()->prepare(
 );
 $stmt->execute([mb_substr($name, 0, 200), mb_substr($email, 0, 200), '', $token]);
 
+log_activity('subscribed to Monday Manna', 'Subscriber', $name . ' <' . $email . '>');
+
 json_response(['ok' => true], 201);

@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $stmt = db()->prepare('UPDATE settings SET org_name = ?, public_email = ?, phone = ?, address = ? WHERE id = 1');
     $stmt->execute([mb_substr($orgName, 0, 200), mb_substr($publicEmail, 0, 200), mb_substr($phone, 0, 60), mb_substr($address, 0, 300)]);
 
+    log_admin_activity('updated', 'Organization settings');
     json_response(['ok' => true]);
 }
 

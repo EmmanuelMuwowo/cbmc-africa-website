@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 
     $id = (int)db()->lastInsertId();
+    log_admin_activity('created', 'Monday Manna', $title);
     $row = db()->prepare('SELECT * FROM devotionals WHERE id = ?');
     $row->execute([$id]);
     json_response(serialize_devotional($row->fetch()), 201);

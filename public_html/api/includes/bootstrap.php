@@ -61,6 +61,26 @@ function valid_status(?string $status): string {
     return in_array($status, ['Published', 'Scheduled', 'Draft'], true) ? $status : 'Draft';
 }
 
+/**
+ * Records something that happened on the site, for the admin Activity Log.
+ * Logging must never break the action it is recording, so failures are swallowed.
+ */
+function log_activity(string $action, string $entityType, string $entityLabel = '', string $actor = 'Visitor'): void {
+    try {
+        $stmt = db()->prepare(
+            'INSERT INTO activity_log (actor, action, entity_type, entity_label) VALUES (?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            mb_substr($actor, 0, 200),
+            mb_substr($action, 0, 50),
+            mb_substr($entityType, 0, 60),
+            mb_substr($entityLabel, 0, 300)
+        ]);
+    } catch (Throwable $e) {
+        // Intentionally ignored - a logging failure should never surface to the user.
+    }
+}
+
 function handle_upload(string $field, string $subdir, array $allowedMimes, int $maxBytes = 8 * 1024 * 1024): ?array {
     if (empty($_FILES[$field]) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) return null;
     if ($_FILES[$field]['error'] !== UPLOAD_ERR_OK) json_error('Upload failed.');

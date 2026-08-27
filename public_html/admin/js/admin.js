@@ -11,6 +11,7 @@
     { key: 'subs', label: 'Subscribers' },
     { key: 'msgs', label: 'Contact Messages' },
     { key: 'media', label: 'Media Library' },
+    { key: 'activity', label: 'Activity Log' },
     { key: 'settings', label: 'Settings' }
   ];
 
@@ -26,6 +27,7 @@
     subs: { title: 'Subscribers', subtitle: 'People receiving the weekly Monday Manna email.' },
     msgs: { title: 'Contact Messages', subtitle: 'Enquiries submitted through the public site.' },
     media: { title: 'Media Library', subtitle: 'Images and files used across the site.' },
+    activity: { title: 'Activity Log', subtitle: 'Everything happening across the site — by staff and by visitors.' },
     settings: { title: 'Settings', subtitle: 'Organization details and site preferences.' }
   };
 
@@ -177,6 +179,7 @@
       subs: '/api/admin/subscribers.php',
       msgs: '/api/admin/messages.php',
       media: '/api/admin/media.php',
+      activity: '/api/admin/activity.php',
       settings: '/api/admin/settings.php'
     };
     return Api.get(map[key]);
@@ -189,6 +192,7 @@
     if (key === 'dash') return renderDash(data);
     if (key === 'msgs') return renderMessages(data);
     if (key === 'media') return renderMedia(data);
+    if (key === 'activity') return renderActivity(data);
     if (key === 'settings') return renderSettings(data);
     return renderTable(key, data);
   }
@@ -552,6 +556,48 @@
         }
       });
     });
+  }
+
+  // ---------- Activity Log ----------
+  const ACTION_COLORS = {
+    created: '#1a8a3e', uploaded: '#1a8a3e', 'signed in': '#0071e3', sent: '#0071e3',
+    subscribed: '#1a8a3e', updated: '#8a6d1a', enabled: '#1a8a3e',
+    deleted: '#c0362c', removed: '#c0362c', disabled: '#c0362c',
+    'failed sign-in attempt': '#c0362c'
+  };
+
+  function actionColor(action) {
+    if (ACTION_COLORS[action]) return ACTION_COLORS[action];
+    const key = Object.keys(ACTION_COLORS).find((k) => action.startsWith(k));
+    return key ? ACTION_COLORS[key] : 'var(--text-muted)';
+  }
+
+  function renderActivity(rows) {
+    const filtered = rows.filter((r) => match(state.search, r.actor, r.action, r.entityType, r.entityLabel));
+    els.content.innerHTML = `
+      <div class="panel">
+        <div style="padding:15px 20px;border-bottom:1px solid var(--border-cream-2);display:flex;align-items:center;">
+          <div style="font-size:16px;font-weight:600;">Recent activity</div>
+          <span class="table-count" style="margin-left:10px;">${filtered.length} entries</span>
+        </div>
+        <div id="activityRows"></div>
+        ${filtered.length === 0 ? `<div class="table-empty">${state.search ? `No activity matches "${Util.escapeHtml(state.search)}".` : 'No activity recorded yet.'}</div>` : ''}
+      </div>
+    `;
+    document.getElementById('activityRows').innerHTML = filtered.map((r) => `
+      <div class="inbox-row">
+        <div class="inbox-avatar">${Util.escapeHtml(r.initials || '?')}</div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:14.5px;color:var(--text-body);line-height:1.5;">
+            <span style="font-weight:600;color:var(--text-dark);">${Util.escapeHtml(r.actor)}</span>
+            <span style="color:${actionColor(r.action)};font-weight:600;"> ${Util.escapeHtml(r.action)} </span>
+            <span style="color:var(--text-muted);">${Util.escapeHtml(r.entityType)}</span>
+            ${r.entityLabel ? `<span style="color:var(--text-mute-3);"> — ${Util.escapeHtml(r.entityLabel)}</span>` : ''}
+          </div>
+        </div>
+        <span style="font-size:11.5px;color:var(--text-mute-4);flex-shrink:0;">${Util.escapeHtml(r.time)}</span>
+      </div>
+    `).join('');
   }
 
   // ---------- Settings ----------

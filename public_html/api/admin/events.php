@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 
     $id = (int)db()->lastInsertId();
+    log_admin_activity('created', 'Event', $title);
     $row = db()->prepare('SELECT * FROM events WHERE id = ?');
     $row->execute([$id]);
     json_response(serialize_event($row->fetch()), 201);

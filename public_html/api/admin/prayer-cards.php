@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([mb_substr($title, 0, 300), $cardBody, $sortOrder, $status]);
 
     $id = (int)db()->lastInsertId();
+    log_admin_activity('created', 'Prayer card', $title);
     $row = db()->prepare('SELECT * FROM prayer_cards WHERE id = ?');
     $row->execute([$id]);
     json_response(serialize_prayer_card($row->fetch()), 201);

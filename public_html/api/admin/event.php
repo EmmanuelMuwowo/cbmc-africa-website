@@ -7,9 +7,14 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) json_error('Missing id.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $existing = db()->prepare('SELECT title FROM events WHERE id = ?');
+    $existing->execute([$id]);
+    $existingTitle = $existing->fetchColumn();
+
     $stmt = db()->prepare('DELETE FROM events WHERE id = ?');
     $stmt->execute([$id]);
     if ($stmt->rowCount() === 0) json_error('Not found.', 404);
+    log_admin_activity('deleted', 'Event', $existingTitle ?: '');
     json_response(['ok' => true]);
 }
 
@@ -45,4 +50,5 @@ $row = db()->prepare('SELECT * FROM events WHERE id = ?');
 $row->execute([$id]);
 $found = $row->fetch();
 if (!$found) json_error('Not found.', 404);
+log_admin_activity('updated', 'Event', $title);
 json_response(serialize_event($found));

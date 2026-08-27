@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row->execute([$id]);
         $found = $row->fetch();
         if (!$found) json_error('Not found.', 404);
+        log_admin_activity('updated', 'Resource', $title);
         json_response(serialize_resource($found));
     }
 
@@ -92,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     $stmt->execute([$title, $description, $category, $filePath, $fileOriginalName, $externalUrl, $publishedDateValue, $status]);
     $newId = (int)db()->lastInsertId();
+    log_admin_activity('created', 'Resource', $title);
     $row = db()->prepare('SELECT * FROM resources WHERE id = ?');
     $row->execute([$newId]);
     json_response(serialize_resource($row->fetch()), 201);
@@ -101,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) json_error('Missing id.');
 
-    $row = db()->prepare('SELECT file_path FROM resources WHERE id = ?');
+    $row = db()->prepare('SELECT title, file_path FROM resources WHERE id = ?');
     $row->execute([$id]);
     $found = $row->fetch();
     if (!$found) json_error('Not found.', 404);
@@ -114,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         if (is_file($diskPath)) @unlink($diskPath);
     }
 
+    log_admin_activity('deleted', 'Resource', $found['title']);
     json_response(['ok' => true]);
 }
 

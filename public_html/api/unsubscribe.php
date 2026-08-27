@@ -13,6 +13,7 @@ if ($email !== '' && $token !== '') {
     if ($sub && $sub['unsubscribe_token'] !== '' && hash_equals($sub['unsubscribe_token'], $token)) {
         $del = db()->prepare('DELETE FROM subscribers WHERE id = ?');
         $del->execute([$sub['id']]);
+        log_activity('unsubscribed from Monday Manna', 'Subscriber', $email);
         $ok = true;
     }
 }
