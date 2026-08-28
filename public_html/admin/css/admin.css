@@ -17,6 +17,8 @@
 .admin-sidebar-foot { margin-top: auto; padding: 16px 22px 0; }
 .exit-btn { display: block; width: 100%; padding: 11px; border-radius: 980px; background: var(--cream); color: var(--text-muted); font-weight: 600; font-size: 13px; text-align: center; }
 .exit-btn:hover { color: var(--navy); }
+.signout-btn { margin-top: 8px; border: none; cursor: pointer; font-family: inherit; }
+.signout-btn:hover { background: #fdecea; color: #c0362c; }
 
 .admin-main { flex: 1; min-width: 320px; background: var(--cream); color: var(--ink); }
 .admin-topbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 30px; background: rgba(255,255,255,.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-cream-2); position: sticky; top: 0; z-index: 5; }

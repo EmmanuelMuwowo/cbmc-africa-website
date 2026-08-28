@@ -105,6 +105,16 @@
     await refreshMsgBadge();
     await loadSection('dash');
 
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      try {
+        await Api.post('/api/admin/logout.php');
+      } catch (e) {
+        // Sign out locally regardless - the session cookie is cleared server-side on success,
+        // and sending the user to the login screen is the right outcome either way.
+      }
+      window.location.href = 'login.html';
+    });
+
     els.searchForm.addEventListener('submit', (e) => e.preventDefault());
     els.searchInput.addEventListener('input', () => {
       state.search = els.searchInput.value;

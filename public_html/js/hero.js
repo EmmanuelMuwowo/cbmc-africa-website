@@ -7,6 +7,6 @@
       ? `<video class="hero-img" autoplay muted loop playsinline src="${Util.escapeHtml(heroUrl)}"></video>`
       : `<img class="hero-img" src="${Util.escapeHtml(heroUrl)}" alt="">`;
   } catch (e) {
-    // keep the default banner already in the page
+    // Leave the hero on its solid background rather than showing a broken image.
   }
 })();

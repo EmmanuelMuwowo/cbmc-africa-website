@@ -19,3 +19,9 @@ define('SITE_URL', 'https://cbmcafrica.org');
 // Any long random string - protects the weekly-email cron endpoint from being
 // triggered by strangers when called over HTTP instead of the command line.
 define('MANNA_CRON_KEY', 'change-this-to-a-long-random-string');
+
+// Any long random string - required to use /setup/create-admin.php.
+// Without a matching ?key= the setup page refuses to run, so the page cannot be
+// used to create an admin account even if the folder is left on the server.
+// Delete the /setup folder after creating your login anyway.
+define('SETUP_KEY', 'change-this-to-a-different-long-random-string');
