@@ -7,7 +7,7 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) json_error('Missing id.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    $row = db()->prepare('SELECT image_url FROM devotionals WHERE id = ?');
+    $row = db()->prepare('SELECT title, image_url FROM devotionals WHERE id = ?');
     $row->execute([$id]);
     $found = $row->fetch();
     if (!$found) json_error('Not found.', 404);
@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $stmt = db()->prepare('DELETE FROM devotionals WHERE id = ?');
     $stmt->execute([$id]);
     delete_uploaded_file($found['image_url']);
+    log_admin_activity('deleted', 'Monday Manna', $found['title'] ?? '');
     json_response(['ok' => true]);
 }
 
@@ -58,6 +59,8 @@ $stmt->execute($params);
 if ($newImageUrl) {
     delete_uploaded_file($existingRow['image_url']);
 }
+
+log_admin_activity('updated', 'Monday Manna', $title);
 
 $row = db()->prepare('SELECT * FROM devotionals WHERE id = ?');
 $row->execute([$id]);

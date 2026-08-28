@@ -22,6 +22,7 @@ $stmt->execute([mb_strtolower($email)]);
 $admin = $stmt->fetch();
 
 if (!$admin || !password_verify($password, $admin['password_hash'])) {
+    log_activity('failed sign-in attempt', 'Account', $email, 'Unknown');
     json_error('Invalid email or password.', 401);
 }
 
@@ -29,5 +30,7 @@ start_session();
 session_regenerate_id(true);
 $_SESSION['admin_id'] = (int)$admin['id'];
 $_SESSION['admin_name'] = $admin['name'];
+
+log_activity('signed in', 'Account', '', $admin['name']);
 
 json_response(['id' => (int)$admin['id'], 'name' => $admin['name'], 'email' => $admin['email']]);

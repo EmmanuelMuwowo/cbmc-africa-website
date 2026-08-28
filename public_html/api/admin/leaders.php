@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row->execute([$id]);
         $found = $row->fetch();
         if (!$found) json_error('Not found.', 404);
+        log_admin_activity('updated', 'Leader', $name);
         json_response(serialize_leader($found));
     }
 
@@ -76,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     $stmt->execute([$name, $title, $region, $bio, $email, $phone, $sortOrder, $status, $photoUrl]);
     $newId = (int)db()->lastInsertId();
+    log_admin_activity('created', 'Leader', $name);
     $row = db()->prepare('SELECT * FROM leaders WHERE id = ?');
     $row->execute([$newId]);
     json_response(serialize_leader($row->fetch()), 201);
@@ -85,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) json_error('Missing id.');
 
-    $row = db()->prepare('SELECT photo_url FROM leaders WHERE id = ?');
+    $row = db()->prepare('SELECT name, photo_url FROM leaders WHERE id = ?');
     $row->execute([$id]);
     $found = $row->fetch();
     if (!$found) json_error('Not found.', 404);
@@ -98,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         if (is_file($diskPath)) @unlink($diskPath);
     }
 
+    log_admin_activity('deleted', 'Leader', $found['name']);
     json_response(['ok' => true]);
 }
 

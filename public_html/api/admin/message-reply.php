@@ -34,4 +34,5 @@ if (!$sent) {
 $upd = db()->prepare('UPDATE messages SET replied = 1, reply_body = ?, replied_at = NOW() WHERE id = ?');
 $upd->execute([mb_substr($replyBody, 0, 4000), $id]);
 
+log_admin_activity('replied to', 'Contact message', $msg['name'] . ' <' . $msg['email'] . '>');
 json_response(['ok' => true]);

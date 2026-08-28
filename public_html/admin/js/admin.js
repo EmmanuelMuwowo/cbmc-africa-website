@@ -11,6 +11,7 @@
     { key: 'subs', label: 'Subscribers' },
     { key: 'msgs', label: 'Contact Messages' },
     { key: 'media', label: 'Media Library' },
+    { key: 'activity', label: 'Activity Log' },
     { key: 'settings', label: 'Settings' }
   ];
 
@@ -26,6 +27,7 @@
     subs: { title: 'Subscribers', subtitle: 'People receiving the weekly Monday Manna email.' },
     msgs: { title: 'Contact Messages', subtitle: 'Enquiries submitted through the public site.' },
     media: { title: 'Media Library', subtitle: 'Images and files used across the site.' },
+    activity: { title: 'Activity Log', subtitle: 'Everything happening across the site — by staff and by visitors.' },
     settings: { title: 'Settings', subtitle: 'Organization details and site preferences.' }
   };
 
@@ -103,6 +105,16 @@
     await refreshMsgBadge();
     await loadSection('dash');
 
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      try {
+        await Api.post('/api/admin/logout.php');
+      } catch (e) {
+        // Sign out locally regardless - the session cookie is cleared server-side on success,
+        // and sending the user to the login screen is the right outcome either way.
+      }
+      window.location.href = 'login.html';
+    });
+
     els.searchForm.addEventListener('submit', (e) => e.preventDefault());
     els.searchInput.addEventListener('input', () => {
       state.search = els.searchInput.value;
@@ -177,6 +189,7 @@
       subs: '/api/admin/subscribers.php',
       msgs: '/api/admin/messages.php',
       media: '/api/admin/media.php',
+      activity: '/api/admin/activity.php',
       settings: '/api/admin/settings.php'
     };
     return Api.get(map[key]);
@@ -189,6 +202,7 @@
     if (key === 'dash') return renderDash(data);
     if (key === 'msgs') return renderMessages(data);
     if (key === 'media') return renderMedia(data);
+    if (key === 'activity') return renderActivity(data);
     if (key === 'settings') return renderSettings(data);
     return renderTable(key, data);
   }
@@ -554,6 +568,48 @@
     });
   }
 
+  // ---------- Activity Log ----------
+  const ACTION_COLORS = {
+    created: '#1a8a3e', uploaded: '#1a8a3e', 'signed in': '#0071e3', sent: '#0071e3',
+    subscribed: '#1a8a3e', updated: '#8a6d1a', enabled: '#1a8a3e',
+    deleted: '#c0362c', removed: '#c0362c', disabled: '#c0362c',
+    'failed sign-in attempt': '#c0362c'
+  };
+
+  function actionColor(action) {
+    if (ACTION_COLORS[action]) return ACTION_COLORS[action];
+    const key = Object.keys(ACTION_COLORS).find((k) => action.startsWith(k));
+    return key ? ACTION_COLORS[key] : 'var(--text-muted)';
+  }
+
+  function renderActivity(rows) {
+    const filtered = rows.filter((r) => match(state.search, r.actor, r.action, r.entityType, r.entityLabel));
+    els.content.innerHTML = `
+      <div class="panel">
+        <div style="padding:15px 20px;border-bottom:1px solid var(--border-cream-2);display:flex;align-items:center;">
+          <div style="font-size:16px;font-weight:600;">Recent activity</div>
+          <span class="table-count" style="margin-left:10px;">${filtered.length} entries</span>
+        </div>
+        <div id="activityRows"></div>
+        ${filtered.length === 0 ? `<div class="table-empty">${state.search ? `No activity matches "${Util.escapeHtml(state.search)}".` : 'No activity recorded yet.'}</div>` : ''}
+      </div>
+    `;
+    document.getElementById('activityRows').innerHTML = filtered.map((r) => `
+      <div class="inbox-row">
+        <div class="inbox-avatar">${Util.escapeHtml(r.initials || '?')}</div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:14.5px;color:var(--text-body);line-height:1.5;">
+            <span style="font-weight:600;color:var(--text-dark);">${Util.escapeHtml(r.actor)}</span>
+            <span style="color:${actionColor(r.action)};font-weight:600;"> ${Util.escapeHtml(r.action)} </span>
+            <span style="color:var(--text-muted);">${Util.escapeHtml(r.entityType)}</span>
+            ${r.entityLabel ? `<span style="color:var(--text-mute-3);"> — ${Util.escapeHtml(r.entityLabel)}</span>` : ''}
+          </div>
+        </div>
+        <span style="font-size:11.5px;color:var(--text-mute-4);flex-shrink:0;">${Util.escapeHtml(r.time)}</span>
+      </div>
+    `).join('');
+  }
+
   // ---------- Settings ----------
   function renderSettings(s) {
     els.content.innerHTML = `
@@ -565,7 +621,7 @@
           <div class="settings-field"><label>PHONE</label><input id="setPhone" value="${Util.escapeHtml(s.phone)}"></div>
           <div class="settings-field"><label>ADDRESS</label><input id="setAddress" value="${Util.escapeHtml(s.address)}"></div>
           <div class="settings-toggle-row">
-            <div><div style="font-weight:600;font-size:14px;">Weekly Monday Manna email</div><div style="font-size:12.5px;color:var(--text-mute-3);">Auto-send every Monday at 6:00 AM</div></div>
+            <div><div style="font-weight:600;font-size:14px;">Weekly Monday Manna email</div><div style="font-size:12.5px;color:var(--text-mute-3);">Auto-send every Monday at 6:00 AM (requires a cron job on your host — see cron/send-manna.php)</div></div>
             <button type="button" class="toggle-switch" id="mannaToggle" style="background:${s.mannaEmailEnabled ? '#1a8a3e' : '#d2d2d7'};">
               <span class="toggle-knob" style="left:${s.mannaEmailEnabled ? '23px' : '3px'};"></span>
             </button>
@@ -574,6 +630,12 @@
           <p class="form-error" id="settingsError" style="display:none;"></p>
           <p class="success-text" id="settingsSaved" style="display:none;color:var(--green);font-weight:600;">Saved.</p>
         </form>
+        <div style="border-top:1px solid var(--border-cream-2);margin-top:22px;padding-top:18px;">
+          <div style="font-weight:600;font-size:14px;">Send this week's Monday Manna now</div>
+          <p style="font-size:12.5px;color:var(--text-mute-3);margin-top:4px;">Emails the newest published devotional that hasn't been sent yet. Safe to click — already-sent devotionals are skipped automatically.</p>
+          <button type="button" class="btn btn-navy" id="mannaSendNowBtn" style="margin-top:10px;">Send now</button>
+          <p id="mannaSendResult" style="font-size:13px;margin-top:10px;"></p>
+        </div>
       </div>
 
       <div class="settings-card" style="margin-top:20px;">
@@ -605,6 +667,34 @@
       btn.style.background = res.mannaEmailEnabled ? '#1a8a3e' : '#d2d2d7';
       btn.querySelector('.toggle-knob').style.left = res.mannaEmailEnabled ? '23px' : '3px';
       state.cache.settings.mannaEmailEnabled = res.mannaEmailEnabled;
+    });
+    document.getElementById('mannaSendNowBtn').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const resultEl = document.getElementById('mannaSendResult');
+      btn.disabled = true;
+      resultEl.style.color = 'var(--text-mute-3)';
+      resultEl.textContent = 'Sending…';
+      try {
+        const res = await Api.post('/api/admin/manna-send-now.php');
+        if (!res.sent) {
+          const reasons = {
+            disabled: 'Weekly email is turned off above — enable it first.',
+            nothing_due: 'Nothing to send — no new published devotional waiting to go out.',
+            no_subscribers: 'No subscribers to send to yet.'
+          };
+          resultEl.textContent = reasons[res.reason] || 'Nothing was sent.';
+        } else {
+          const allFailed = res.devotionals.every((d) => d.sent === 0 && d.failed > 0);
+          resultEl.style.color = allFailed ? '#c0362c' : 'var(--green)';
+          resultEl.textContent = res.devotionals.map((d) => `${d.sent === 0 && d.failed > 0 ? 'Could not send' : 'Sent'} "${d.title}" to ${d.sent} subscriber(s)${d.failed ? `, ${d.failed} failed` : ''}.`).join(' ')
+            + (allFailed ? ' Your server’s mail (PHP mail()/sendmail) may not be configured yet - check with your host. This devotional will be retried next time.' : '');
+        }
+      } catch (err) {
+        resultEl.style.color = '#c0362c';
+        resultEl.textContent = err.message || 'Could not send right now.';
+      } finally {
+        btn.disabled = false;
+      }
     });
     document.getElementById('settingsForm').addEventListener('submit', async (e) => {
       e.preventDefault();

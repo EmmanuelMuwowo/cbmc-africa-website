@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 
     $id = (int)db()->lastInsertId();
+    log_admin_activity('created', 'News article', $title);
     $row = db()->prepare('SELECT * FROM news WHERE id = ?');
     $row->execute([$id]);
     json_response(serialize_news($row->fetch()), 201);

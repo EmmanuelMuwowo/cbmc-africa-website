@@ -37,4 +37,6 @@ if ($old && $old['hero_url'] !== $url) {
     delete_uploaded_file($old['hero_url']);
 }
 
+log_admin_activity('updated', 'Homepage hero', $type === 'video' ? 'video' : 'image');
+
 json_response(['heroType' => $type, 'heroUrl' => $url]);

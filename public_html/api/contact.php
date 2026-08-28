@@ -14,4 +14,6 @@ if ($name === '' || !is_valid_email($email) || $message === '') {
 $stmt = db()->prepare('INSERT INTO messages (name, email, message) VALUES (?, ?, ?)');
 $stmt->execute([mb_substr($name, 0, 200), mb_substr($email, 0, 200), mb_substr($message, 0, 4000)]);
 
+log_activity('sent', 'Contact message', $name . ' <' . $email . '>');
+
 json_response(['ok' => true], 201);

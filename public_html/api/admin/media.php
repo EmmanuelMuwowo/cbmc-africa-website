@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) json_error('Missing id.');
 
-    $row = db()->prepare('SELECT url FROM media WHERE id = ?');
+    $row = db()->prepare('SELECT filename, url FROM media WHERE id = ?');
     $row->execute([$id]);
     $found = $row->fetch();
     if (!$found) json_error('Not found.', 404);
@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         if (is_file($diskPath)) @unlink($diskPath);
     }
 
+    log_admin_activity('deleted', 'Media file', $found['filename']);
     json_response(['ok' => true]);
 }
 
@@ -62,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = db()->prepare('INSERT INTO media (filename, url) VALUES (?, ?)');
     $stmt->execute([$file['name'], $url]);
     $newId = (int)db()->lastInsertId();
+    log_admin_activity('uploaded', 'Media file', $file['name']);
 
     json_response(['id' => $newId, 'name' => $file['name'], 'src' => $url], 201);
 }

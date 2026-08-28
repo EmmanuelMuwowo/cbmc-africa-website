@@ -1,8 +1,21 @@
 <?php
 // One-time setup page: creates the first admin account.
-// Visit this once after importing database.sql, then DELETE THIS FILE (or this
-// whole /setup folder) - leaving it live would let anyone create admin accounts.
+//
+// Reaching it requires ?key=YOUR_SETUP_KEY matching SETUP_KEY in
+// api/includes/config.php, so this page cannot be used to create an admin
+// account even if the folder is accidentally left on the server.
+//
+// Still delete this whole /setup folder once your login exists.
 require_once __DIR__ . '/../api/includes/bootstrap.php';
+
+if (!defined('SETUP_KEY') || SETUP_KEY === '' || SETUP_KEY === 'change-this-to-a-different-long-random-string') {
+    http_response_code(403);
+    exit('Set a real SETUP_KEY in api/includes/config.php before using this page.');
+}
+if (!hash_equals(SETUP_KEY, $_GET['key'] ?? '')) {
+    http_response_code(403);
+    exit('Forbidden.');
+}
 
 $pdo = db();
 $existing = (int)$pdo->query('SELECT COUNT(*) FROM admins')->fetchColumn();

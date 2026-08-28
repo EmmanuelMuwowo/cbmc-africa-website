@@ -19,6 +19,23 @@ function current_admin_id(): ?int {
     return $_SESSION['admin_id'] ?? null;
 }
 
+function current_admin_name(): string {
+    $id = current_admin_id();
+    if (!$id) return 'System';
+    static $name = null;
+    if ($name === null) {
+        $stmt = db()->prepare('SELECT name FROM admins WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn() ?: 'Admin';
+    }
+    return $name;
+}
+
+/** Records an admin action in the Activity Log, attributed to the signed-in admin. */
+function log_admin_activity(string $action, string $entityType, string $entityLabel = ''): void {
+    log_activity($action, $entityType, $entityLabel, current_admin_name());
+}
+
 function require_admin(): int {
     $id = current_admin_id();
     if (!$id) {
