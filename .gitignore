@@ -15,3 +15,5 @@ public_html/uploads/hero/*
 !public_html/uploads/hero/.gitkeep
 *.log
 .DS_Store
+temp_fix_arrows.ps1
+update_footer.py
