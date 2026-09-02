@@ -21,14 +21,14 @@ $fromEmail = $settings['public_email'] ?? 'no-reply@localhost';
 
 $subject = 'Re: your message to ' . $orgName;
 $emailBody = $replyBody . "\n\n---\nYour original message:\n" . $msg['message'];
-$headers = "From: {$orgName} <{$fromEmail}>\r\n"
-    . "Reply-To: {$fromEmail}\r\n"
-    . "Content-Type: text/plain; charset=UTF-8";
 
-$sent = @mail($msg['email'], $subject, $emailBody, $headers);
+$sent = send_app_mail($msg['email'], $msg['name'], $subject, $emailBody, $fromEmail, $orgName);
 
 if (!$sent) {
-    json_error("Could not send the email. This usually means the server's mail (PHP mail() / sendmail) isn't configured yet - check with your hosting provider.", 500);
+    $hint = defined('SMTP_HOST') && SMTP_HOST !== ''
+        ? "Could not send the email via SMTP - check SMTP_HOST/SMTP_USER/SMTP_PASS in config.php, and your server's error log for details."
+        : "Could not send the email. This usually means the server's mail (PHP mail() / sendmail) isn't configured yet - check with your hosting provider, or set SMTP_HOST in config.php to send through a real mailbox instead.";
+    json_error($hint, 500);
 }
 
 $upd = db()->prepare('UPDATE messages SET replied = 1, reply_body = ?, replied_at = NOW() WHERE id = ?');

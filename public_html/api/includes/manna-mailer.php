@@ -59,11 +59,8 @@ function send_weekly_manna(): array {
                 . "---\n"
                 . "You're receiving this because you subscribed to Monday Manna from {$orgName}.\n"
                 . "Unsubscribe: {$unsubscribeLink}";
-            $headers = "From: {$orgName} <{$fromEmail}>\r\n"
-                . "Reply-To: {$fromEmail}\r\n"
-                . "Content-Type: text/plain; charset=UTF-8";
 
-            if (@mail($sub['email'], $subject, $body, $headers)) {
+            if (send_app_mail($sub['email'], $sub['name'], $subject, $body, $fromEmail, $orgName)) {
                 $sentCount++;
             } else {
                 $failCount++;
