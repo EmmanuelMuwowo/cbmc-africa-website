@@ -1,13 +1,13 @@
 :root {
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  --navy: #1d1d1f;       /* near-black: dark sections, dark buttons, strong headlines */
-  --navy-deep: #000000;  /* footer / deepest dark */
-  --navy-dark: #000000;  /* dark button hover */
-  --gold: #0071e3;       /* primary accent (Apple blue) */
-  --gold-dark: #0058b0;  /* accent hover */
-  --gold-light: #2997ff; /* light accent for use on dark backgrounds */
-  --gold-pale: #98989d;  /* muted label color on dark backgrounds */
+  --navy: #14284A;       /* CBMC corporate navy: dark sections, dark buttons, strong headlines */
+  --navy-deep: #0A1930;  /* footer / deepest dark */
+  --navy-dark: #0A1930;  /* dark button hover */
+  --gold: #E07B39;       /* CBMC corporate orange: primary accent, Give/CTA buttons */
+  --gold-dark: #C4652A;  /* accent hover */
+  --gold-light: #F2A268; /* light accent for use on dark backgrounds */
+  --gold-pale: #E8A470;  /* muted label color on dark backgrounds */
   --ochre: #86868b;      /* eyebrow / kicker text on light backgrounds */
   --cream: #f5f5f7;      /* light gray section background */
   --cream-2: #ffffff;    /* white card / section background */
@@ -15,14 +15,14 @@
   --border-cream: #d2d2d7;
   --border-cream-2: #e8e8ed;
   --border-input: #d2d2d7;
-  --ink: #1d1d1f;
-  --text-dark: #1d1d1f;
+  --ink: #14284A;
+  --text-dark: #14284A;
   --text-body: #424245;
   --text-muted: #6e6e73;
   --text-mute-2: #6e6e73;
   --text-mute-3: #86868b;
   --text-mute-4: #a1a1a6;
-  --link: #0071e3;
+  --link: #1CA9E8;       /* CBMC corporate sky-blue: headings, links */
   --green-bg: #e3f6e8;
   --green: #1a8a3e;
   --red: #ff3b30;
@@ -115,7 +115,15 @@ img { max-width: 100%; }
   position: relative; background: var(--navy); overflow: hidden;
 }
 .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .38; }
-.hero-scrim { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(0,0,0,.92) 30%, rgba(0,0,0,.45)); }
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(20, 40, 74, 0.80) 30%,
+    rgba(20, 40, 74, 0.35)
+  );
+}
 .hero-inner { position: relative; max-width: 1220px; margin: 0 auto; padding: clamp(64px,11vw,120px) 24px clamp(72px,12vw,128px); }
 .hero-kicker { font-size: 13px; letter-spacing: .3px; color: var(--gold-pale); font-weight: 600; margin-bottom: 18px; }
 .hero-title { font-weight: 600; color: #fff; font-size: clamp(36px,5.6vw,68px); line-height: 1.05; max-width: 16ch; letter-spacing: -.03em; }
@@ -300,7 +308,7 @@ img { max-width: 100%; }
 /* ---------- Article detail ---------- */
 .article-hero { position: relative; background: var(--navy); overflow: hidden; }
 .article-hero-bg { position: absolute; inset: 0; background-position: center; background-size: cover; opacity: .25; }
-.article-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.95)); }
+.article-hero-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,40,74,.55), rgba(20,40,74,.95)); }
 .article-hero-inner { position: relative; max-width: 760px; margin: 0 auto; padding: clamp(40px,6vw,72px) 24px clamp(44px,7vw,64px); }
 .back-link { color: var(--gold-pale); font-size: 13.5px; font-weight: 600; margin-bottom: 22px; background: none; display: inline-block; }
 .article-kicker { font-size: 12px; letter-spacing: .3px; color: var(--gold-pale); font-weight: 600; }
@@ -345,7 +353,7 @@ textarea.field-input { min-height: 130px; resize: vertical; }
 .footer-grid { max-width: 1220px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 36px; padding-bottom: 44px; }
 .footer-brand { display: flex; align-items: center; gap: 11px; }
 .footer-col { min-width: 200px; }
-.footer-col-head { font-size: 12px; letter-spacing: .5px; color: #98989d; font-weight: 700; }
+.footer-col-head { font-size: 12px; letter-spacing: .5px; color: var(--link); font-weight: 700; }
 .footer-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .footer-links a, .footer-links button { text-align: left; color: #a1a1a6; font-size: 14.5px; background: none; }
 .footer-links a:hover, .footer-links button:hover { color: #fff; }
