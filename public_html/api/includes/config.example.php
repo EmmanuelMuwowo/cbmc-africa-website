@@ -25,3 +25,14 @@ define('MANNA_CRON_KEY', 'change-this-to-a-long-random-string');
 // used to create an admin account even if the folder is left on the server.
 // Delete the /setup folder after creating your login anyway.
 define('SETUP_KEY', 'change-this-to-a-different-long-random-string');
+
+// Outgoing mail (contact-form replies, weekly Monday Manna). Most modern hosts
+// don't run a local sendmail/MTA, so PHP's built-in mail() silently fails - set
+// these to a real mailbox and the site sends through that mailbox's SMTP server
+// instead. Leave SMTP_HOST blank to fall back to mail() (only works if your host
+// has a local mail transport configured).
+define('SMTP_HOST', 'imbra.email');
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'noreply@yourdomain.com'); // a real mailbox you created for the site
+define('SMTP_PASS', 'that-mailbox-password');
+define('SMTP_FROM_NAME', 'CBMC Africa');
