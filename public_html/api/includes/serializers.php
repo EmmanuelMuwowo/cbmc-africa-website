@@ -68,6 +68,7 @@ function serialize_leader(array $row): array {
         'name' => $row['name'],
         'title' => $row['title'],
         'region' => $row['region'],
+        'category' => $row['category'] ?? 'Executive Staff',
         'bio' => $row['bio'],
         'photo' => $row['photo_url'],
         'email' => $row['email'],

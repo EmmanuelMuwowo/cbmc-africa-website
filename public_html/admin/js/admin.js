@@ -337,12 +337,12 @@
     },
     leaders: {
       heading: 'Leadership Team', addLabel: '+ Add Leader',
-      cols: ['Name', 'Title', 'Region', 'Status', ''],
-      colsCss: '2fr 1.4fr 1.1fr 0.9fr 1.1fr',
-      filter: (q, r) => match(q, r.name, r.title, r.region),
+      cols: ['Name', 'Title', 'Category', 'Region', 'Status', ''],
+      colsCss: '1.8fr 1.3fr 1.2fr 1fr 0.9fr 1.1fr',
+      filter: (q, r) => match(q, r.name, r.title, r.region, r.category),
       cells: (r) => [
         `<span style="display:flex;align-items:center;gap:10px;"><span style="width:28px;height:28px;border-radius:50%;flex-shrink:0;background:${r.photo ? `url('${Util.escapeHtml(r.photo)}') center/cover` : '#f0f0f2'};"></span>${Util.escapeHtml(r.name)}</span>`,
-        r.title || '—', r.region || '—', badgePill(r.status)
+        r.title || '—', r.category || 'Executive Staff', r.region || '—', badgePill(r.status)
       ],
       onAdd: () => openLeaderModal('create'),
       onEdit: (r) => openLeaderModal('edit', r),
@@ -1075,6 +1075,7 @@
   let leaderState = { mode: null, id: null };
 
   const LEADER_REGIONS = ['Continental / Global', 'Central Africa', 'East Africa', 'North Africa', 'South Africa', 'West Africa'];
+  const LEADER_CATEGORIES = ['Board Member', 'Executive Staff'];
 
   function openLeaderModal(mode, row) {
     leaderState = { mode, id: row ? row.id : null };
@@ -1088,12 +1089,17 @@
         <div><label class="field-label">NAME</label><input class="field-input" required id="ldFieldName" placeholder="e.g. Jane Mwansa"></div>
         <div style="display:flex;gap:12px;">
           <div style="flex:1;"><label class="field-label">TITLE / ROLE</label><input class="field-input" id="ldFieldTitle" placeholder="e.g. Regional Director"></div>
-          <div style="flex:1;"><label class="field-label">REGION</label>
-            <select class="field-input" id="ldFieldRegion">
-              <option value="">— Select —</option>
-              ${LEADER_REGIONS.map((r) => `<option value="${Util.escapeHtml(r)}">${Util.escapeHtml(r)}</option>`).join('')}
+          <div style="flex:1;"><label class="field-label">CATEGORY</label>
+            <select class="field-input" id="ldFieldCategory">
+              ${LEADER_CATEGORIES.map((c) => `<option value="${Util.escapeHtml(c)}">${Util.escapeHtml(c)}</option>`).join('')}
             </select>
           </div>
+        </div>
+        <div><label class="field-label">REGION</label>
+          <select class="field-input" id="ldFieldRegion">
+            <option value="">— Select —</option>
+            ${LEADER_REGIONS.map((r) => `<option value="${Util.escapeHtml(r)}">${Util.escapeHtml(r)}</option>`).join('')}
+          </select>
         </div>
         <div><label class="field-label">BIO</label><textarea class="field-input" id="ldFieldBio" placeholder="A short biography…"></textarea></div>
         <div style="display:flex;gap:12px;">
@@ -1122,6 +1128,7 @@
     if (mode === 'edit' && row) {
       document.getElementById('ldFieldName').value = row.name;
       document.getElementById('ldFieldTitle').value = row.title || '';
+      document.getElementById('ldFieldCategory').value = row.category || 'Executive Staff';
       document.getElementById('ldFieldRegion').value = row.region || '';
       document.getElementById('ldFieldBio').value = row.bio || '';
       document.getElementById('ldFieldEmail').value = row.email || '';
@@ -1148,6 +1155,7 @@
     const fd = new FormData();
     fd.append('name', name);
     fd.append('title', document.getElementById('ldFieldTitle').value.trim());
+    fd.append('category', document.getElementById('ldFieldCategory').value);
     fd.append('region', document.getElementById('ldFieldRegion').value);
     fd.append('bio', document.getElementById('ldFieldBio').value.trim());
     fd.append('email', document.getElementById('ldFieldEmail').value.trim());

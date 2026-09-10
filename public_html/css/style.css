@@ -271,6 +271,9 @@ img { max-width: 100%; }
 .leader-body h3 { font-size: 18px; font-weight: 600; color: var(--text-dark); letter-spacing: -.01em; }
 .leader-title { font-size: 13.5px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
 .leader-region-tag { display: inline-block; margin-top: 10px; background: var(--cream); color: var(--text-muted); }
+.leader-category-tag { display: inline-block; margin-top: 10px; margin-right: 6px; background: #e8f0fe; color: var(--link); }
+.leader-category-tag.is-board { background: #fdf0e6; color: var(--gold-dark); }
+.leader-category-label { font-size: 13px; letter-spacing: 1px; font-weight: 700; color: var(--navy); text-transform: uppercase; margin-bottom: 16px; }
 .leader-body p { font-size: 14px; color: var(--text-muted); line-height: 1.55; margin-top: 12px; }
 .leader-contact { margin-top: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .leader-contact a { color: var(--gold); font-weight: 600; }
