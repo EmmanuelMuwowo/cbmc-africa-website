@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim($_POST['phone'] ?? '');
     $sortOrder = (int)($_POST['sortOrder'] ?? 0);
     $status = in_array($_POST['status'] ?? '', ['Published', 'Draft'], true) ? $_POST['status'] : 'Draft';
+    $category = in_array($_POST['category'] ?? '', ['Board Member', 'Executive Staff'], true) ? $_POST['category'] : 'Executive Staff';
 
     if ($name === '') json_error('Name is required.');
     if ($email !== '' && !is_valid_email($email)) json_error('Enter a valid email address.');
@@ -54,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($isUpdate) {
         if ($photoUrl) {
             $stmt = db()->prepare(
-                'UPDATE leaders SET name=?, title=?, region=?, bio=?, email=?, phone=?, sort_order=?, status=?, photo_url=? WHERE id=?'
+                'UPDATE leaders SET name=?, title=?, region=?, category=?, bio=?, email=?, phone=?, sort_order=?, status=?, photo_url=? WHERE id=?'
             );
-            $stmt->execute([$name, $title, $region, $bio, $email, $phone, $sortOrder, $status, $photoUrl, $id]);
+            $stmt->execute([$name, $title, $region, $category, $bio, $email, $phone, $sortOrder, $status, $photoUrl, $id]);
         } else {
             $stmt = db()->prepare(
-                'UPDATE leaders SET name=?, title=?, region=?, bio=?, email=?, phone=?, sort_order=?, status=? WHERE id=?'
+                'UPDATE leaders SET name=?, title=?, region=?, category=?, bio=?, email=?, phone=?, sort_order=?, status=? WHERE id=?'
             );
-            $stmt->execute([$name, $title, $region, $bio, $email, $phone, $sortOrder, $status, $id]);
+            $stmt->execute([$name, $title, $region, $category, $bio, $email, $phone, $sortOrder, $status, $id]);
         }
         $row = db()->prepare('SELECT * FROM leaders WHERE id = ?');
         $row->execute([$id]);
@@ -72,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt = db()->prepare(
-        'INSERT INTO leaders (name, title, region, bio, email, phone, sort_order, status, photo_url)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO leaders (name, title, region, category, bio, email, phone, sort_order, status, photo_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$name, $title, $region, $bio, $email, $phone, $sortOrder, $status, $photoUrl]);
+    $stmt->execute([$name, $title, $region, $category, $bio, $email, $phone, $sortOrder, $status, $photoUrl]);
     $newId = (int)db()->lastInsertId();
     log_admin_activity('created', 'Leader', $name);
     $row = db()->prepare('SELECT * FROM leaders WHERE id = ?');

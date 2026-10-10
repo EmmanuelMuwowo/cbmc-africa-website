@@ -167,6 +167,9 @@ CREATE TABLE IF NOT EXISTS leaders (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Lets the Leadership page split people into "Board Members" and "Executive Staff".
+ALTER TABLE leaders ADD COLUMN IF NOT EXISTS category ENUM('Board Member','Executive Staff') NOT NULL DEFAULT 'Executive Staff';
+
 CREATE TABLE IF NOT EXISTS pages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   slug VARCHAR(160) NOT NULL UNIQUE,
